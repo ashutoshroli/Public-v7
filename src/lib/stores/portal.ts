@@ -5,7 +5,7 @@
  */
 import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
-import { loadPortalData, type PortalResult, type PortalSource } from '$lib/api/client';
+import { loadPortalData as fetchPortalData, type PortalResult, type PortalSource } from '$lib/api/client';
 import { EMPTY_PORTAL_DATA, type PortalData } from '$lib/api/schema';
 import { availableYears, ALL_YEARS, type YearSel } from '$lib/api/derive';
 
@@ -45,6 +45,16 @@ export const portalState = writable<PortalState>(initialState);
 export const year = writable<YearSel>(new Date().getFullYear());
 
 export const years = derived(portalState, ($s) => availableYears($s.data));
+// Compatibility exports for existing V7 routes, backed by the V6 canonical store.
+export const portalData = derived(portalState, ($s) => $s.data);
+export const portalLoading = derived(portalState, ($s) => $s.status === 'loading');
+export const portalError = derived(portalState, ($s) => $s.failed ? 'Unable to load current records. Showing any saved offline copy.' : '');
+export const selectedPortalYear = writable<string>(String(new Date().getFullYear()));
+year.subscribe((value) => selectedPortalYear.set(String(value)));
+selectedPortalYear.subscribe((value) => {
+  const parsed = Number(value);
+  if (Number.isInteger(parsed) && parsed >= 2000 && parsed <= 2100) year.set(parsed);
+});
 
 let started = false;
 
@@ -56,7 +66,7 @@ export async function initPortal(force = false): Promise<void> {
 
   portalState.update((s) => ({ ...s, status: 'loading' }));
 
-  const result: PortalResult = await loadPortalData({ force });
+  const result: PortalResult = await fetchPortalData({ force });
   const yrs = availableYears(result.data);
   // A cold failure: no snapshot, no rows — we have nothing to show and nothing to
   // check a record against. (A dead `const failed = … ? false : false` used to sit
@@ -87,3 +97,6 @@ export async function initPortal(force = false): Promise<void> {
 export async function refreshPortal(): Promise<void> {
   await initPortal(true);
 }
+
+/** V7-compatible loader name backed by the V6 shared store. */
+export async function loadPortalData(): Promise<void> { await initPortal(); }
