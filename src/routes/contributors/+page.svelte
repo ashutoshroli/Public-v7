@@ -2,6 +2,7 @@
   import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
+  import { lang } from '$lib/stores/lang';
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[]; users?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -45,7 +46,7 @@
     const id = value(row,'ID','ID ') || value(row,'Name','name');
     if (!id) return map;
     const user = userMap.get(id);
-    const displayName = value(user,'Name (Hindi)','Name (Hindi) ','Name','Name ') || value(row,'Name (Hindi)','Name','name') || id;
+    const displayName = value(user, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)', 'Name (Hindi) ', 'Name ') || value(row, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)', 'name') || id;
     const kind = kindOf(row);
     const old = map.get(id) || { id, name: displayName, amount: 0, kinds: new Set<string>(), entries: 0, detail: '', village: value(user,'Village'), photo: value(user,'Photo','Photo URL','Image') };
     if (kind === 'Cash') old.amount += amount(value(row,'Amount','amount'));
@@ -56,7 +57,7 @@
     return map;
   }, new Map<string, {id:string;name:string;amount:number;kinds:Set<string>;entries:number;detail:string;village:string;photo:string}>());
   $: contributors = [...contributorMap.values()]
-    .filter(c => c.name.toLowerCase().includes(query.toLowerCase()) && (filter === 'All' || c.kinds.has(filter)))
+    .filter(c => (c.name.toLowerCase().includes(query.toLowerCase()) || c.id.toLowerCase().includes(query.toLowerCase())) && (filter === 'All' || c.kinds.has(filter)))
     .sort((a,b)=>b.amount-a.amount);
   $: total = contributors.reduce((sum,c)=>sum+c.amount,0);
   const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });

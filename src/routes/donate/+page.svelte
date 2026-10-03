@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
   import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
+  import { lang } from '$lib/stores/lang';
   type Row=Record<string,unknown>;
   type Data={donation?:Record<string,unknown>;committee?:Row[];users?:Row[]};
   let data:Data={}; let loading=true; let error='';
@@ -11,7 +12,7 @@
   $: userMap=new Map((data.users||[]).map(u=>[value(u,'ID'),u]).filter(([id])=>!!id) as [string,Row][]);
   $: years=[...new Set((data.committee||[]).map(r=>value(r,'Year')).filter(y=>/^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
   $: liveYear=years.includes(String(new Date().getFullYear()))?String(new Date().getFullYear()):years[0];
-  $: members=(data.committee||[]).filter(r=>value(r,'Year')===liveYear).map(r=>{const id=value(r,'ID','Name'),u=userMap.get(id);return {id,name:value(u,'Name','Name (Hindi)')||value(r,'Name')||id,village:value(u,'Village','Village (Hindi)'),mobile:value(u,'Mobile'),role:value(r,'View Role','Role')||value(u,'Designation')}}).filter(m=>m.name);
+  $: members=(data.committee||[]).filter(r=>value(r,'Year')===liveYear).map(r=>{const id=value(r,'ID','Name'),u=userMap.get(id);return {id,name:value(u, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)')||value(r, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)')||id,village:value(u,'Village','Village (Hindi)'),mobile:value(u,'Mobile'),role:value(r,'View Role','Role')||value(u,'Designation')}}).filter(m=>m.name);
   $: hasAny=Object.values(details).some(Boolean)||members.length>0;
   const unsubData=portalData.subscribe(v=>data=v as Data);
   const unsubLoad=portalLoading.subscribe(v=>loading=v);

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
   import BottomNav from '$lib/components/BottomNav.svelte';
+  import { lang } from '$lib/stores/lang';
   type Row = Record<string, unknown>;
   type PortalData = { loans?: Row[]; users?: Row[]; guarantors?: Row[]; collections?: Row[]; committee?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -47,12 +48,12 @@
       const gu = userMap.get(gid);
       const isContributor = (data.collections || []).some(x => yearOf(x) === loanYear && [value(x,'ID'),value(x,'Name')].includes(gid));
       const isCommittee = (data.committee || []).some(x => yearOf(x) === loanYear && [value(x,'ID'),value(x,'Name')].includes(gid));
-      return {id:gid,name:value(gu,'Name (Hindi)','Name') || gid,village:value(gu,'Village'),isContributor,isCommittee};
+      return {id:gid,name:value(gu, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)') || gid,village:value(gu,'Village'),isContributor,isCommittee};
       });
     });
     const repaid = amount(value(row,'Amount Returned','Returned Amount','Repaid Amount','Total Repaid','Paid Amount'));
     const outstanding = Math.max(0, principal + interest - repaid);
-    return {id,name:value(user,'Name (Hindi)','Name') || value(row,'Name (Hindi)','Name') || id || 'Loan record',loanId,principal,rate,tenure,interest,total:principal+interest,repaid,outstanding,year:loanYear,guarantors};
+    return {id,name:value(user, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)') || value(row, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)') || id || 'Loan record',loanId,principal,rate,tenure,interest,total:principal+interest,repaid,outstanding,year:loanYear,guarantors};
   });
   $: visible = records.filter(r => {
     const q = query.toLowerCase();

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
   import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
+  import { lang } from '$lib/stores/lang';
   type Row=Record<string,unknown>;
   let data:Record<string,unknown>={};let loading=true;let error='';
   const params=typeof window!=='undefined'?new URLSearchParams(window.location.search):new URLSearchParams();

@@ -1,6 +1,7 @@
 <script lang="ts">
   import BottomNav from "$lib/components/BottomNav.svelte";
   import DonatePopup from "$lib/components/DonatePopup.svelte";
+  import { lang } from '$lib/stores/lang';
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
 
@@ -46,7 +47,7 @@
     const id = value(row,'ID','ID ') || value(row,'Name','name');
     if (!id) return map;
     const user = userMap.get(id);
-    const name = value(user,'Name (Hindi)','Name','Name ') || value(row,'Name (Hindi)','Name','name') || id;
+    const name = value(user, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)', 'Name ') || value(row, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)', 'name') || id;
     const old = map.get(id) || { name, amount: 0, type: '' };
     if (isCash(row)) old.amount += amount(value(row,'Amount','amount'));
     old.type = value(row, 'Contribution Type', 'Type', 'type') || old.type;

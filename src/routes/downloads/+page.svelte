@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
   import BottomNav from '$lib/components/BottomNav.svelte';
+  import { lang } from '$lib/stores/lang';
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[]; users?: Row[]; generatedFiles?: Row[]; generated_files?: Row[]; loanConsents?: Row[]; loan_consents?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -37,7 +38,7 @@
     ...(data.collections || []).flatMap((r,i) => {
       if (resell(r)) return [];
       const year = value(r,'Year'), id = value(r,'ID','Name'), user = userMap.get(id);
-      const name = value(user,'Name (Hindi)','Name') || value(r,'Name (Hindi)','Name') || id || 'Contribution';
+      const name = value(user, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)') || value(r, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)') || id || 'Contribution';
       const type = value(r,'Contribution Type');
       const docType = type === '2' ? 'samaan' : type === '3' ? 'receipt_work' : value(r,'Certificate','Is Certificate').toLowerCase() === 'true' ? 'certificate' : 'receipt';
       const rowIndex = value(r,'__rowIndex') || String(i);
@@ -55,7 +56,7 @@
       const file = generated.find(g=>value(g,'doc_type')===type && value(g,'year')===year && value(g,'record_id')===recordId);
       const personId = value(r,'person_id'), user = userMap.get(personId);
       const link = safePublicUrl(value(file,'public_link'));
-      return link ? [{name:value(user,'Name') || personId || 'Consent document',year,type,recordId,link,kind:role === 'loaner' ? 'Loaner consent' : 'Guarantor consent'}] : [];
+      return link ? [{name:value(user, $lang === 'hi' ? 'Name (Hindi)' : 'Name', $lang === 'hi' ? 'Name' : 'Name (Hindi)') || personId || 'Consent document',year,type,recordId,link,kind:role === 'loaner' ? 'Loaner consent' : 'Guarantor consent'}] : [];
     })
   ];
   $: visible = documents.filter(d=>d.year===selectedYear && [d.name,d.year,d.kind,d.recordId].join(' ').toLowerCase().includes(query.toLowerCase()));

@@ -2,6 +2,7 @@
   import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
+  import { lang } from '$lib/stores/lang';
   type Row = Record<string, unknown>;
   type PortalData = { expenses?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -28,7 +29,7 @@
   const money = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
   const yearOf = (r: Row) => value(r, 'Year', 'year');
   const categoryOf = (r: Row) => value(r, 'Category', 'category') || 'Other';
-  const descriptionOf = (r: Row) => value(r,'Discription (Hindi)','Discription','Description (Hindi)','Description','description','Name') || 'Expense record';
+  const descriptionOf = (r: Row) => value(r, $lang === 'hi' ? 'Discription (Hindi)' : 'Discription', $lang === 'hi' ? 'Discription' : 'Discription (Hindi)', $lang === 'hi' ? 'Description (Hindi)' : 'Description', $lang === 'hi' ? 'Description' : 'Description (Hindi)', 'description','Name') || 'Expense record';
   $: yearsAvailable = [...new Set((data.expenses || []).map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
   $: if (yearsAvailable.length && !yearsAvailable.includes(selectedYear)) selectedYear = yearsAvailable[0];
   $: if (yearsAvailable.length && selectedPortalYearValue && yearsAvailable.includes(selectedPortalYearValue)) selectedYear = selectedPortalYearValue;
