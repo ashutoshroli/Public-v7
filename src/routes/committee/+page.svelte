@@ -1,6 +1,7 @@
 <script lang="ts">
   import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
+  import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
   type Row = Record<string, unknown>;
   let rows: Row[] = [], users: Row[] = [], loading = true, error = '';
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -21,14 +22,13 @@
     const u = userMap.get(id);
     return { id, name: value(u,'Name') || value(r,'Name') || id, hindi: value(u,'Name (Hindi)'), role: value(r,'View Role','Role') || value(u,'Designation'), roleHindi: value(r,'View Role (Hindi)','Role (Hindi)') || value(u,'Designation (Hindi)'), village: value(u,'Village'), villageHindi: value(u,'Village (Hindi)'), year: value(r,'Year'), mobile: value(u,'Mobile') };
   }).filter(m => m.name || m.role).sort((a,b)=>Number(b.year)-Number(a.year));
-  onMount(async () => {
-    try { const res = await fetch(API); if (!res.ok) throw new Error('Committee records are temporarily unavailable.');
-      const raw = await res.json(); const d = raw.data && typeof raw.data === 'object' ? raw.data : raw;
-      rows = Array.isArray(d.committee) ? d.committee : []; users = Array.isArray(d.users) ? d.users : [];
-    } catch(e) { error = e instanceof Error ? e.message : 'Unable to load committee records.'; }
-    finally { loading = false; }
-  });
-</script>
+  const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });
+  const unsubscribeLoading = portalLoading.subscribe((value) => { loading = value; });
+  const unsubscribeError = portalError.subscribe((value) => { error = value; });
+  onMount(() => {
+    void loadPortalData().catch(() => {});
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
+  });</script>
 <svelte:head><title>Committee — Chhath Puja</title><meta name="description" content="Committee information for Shaharpura Chhath Puja." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
 <main class="page">
