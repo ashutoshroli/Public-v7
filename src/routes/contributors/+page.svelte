@@ -25,11 +25,12 @@
   const amount = (v: unknown) => { const n = Number(String(v ?? '').replace(/[^0-9.-]/g, '')); return Number.isFinite(n) ? n : 0; };
   const money = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
   const yearOf = (r: Row) => value(r, 'Year', 'year');
-  const kindOf = (r: Row): 'Cash' | 'Material' | 'Service' => {
+  const kindOf = (r: Row): 'Cash' | 'Material' | 'Service' | 'Other' => {
     const type = value(r, 'Contribution Type', 'Contribution Type ', 'Type', 'type').trim().toLowerCase();
-    if (['1','cash','money','monetary'].includes(type) || !type) return 'Cash';
+    if (['1','cash','money','monetary'].includes(type)) return 'Cash';
     if (['2','material','samaan','सामान'].includes(type)) return 'Material';
-    return 'Service';
+    if (['3','service','work','सेवा','काम'].includes(type)) return 'Service';
+    return 'Other';
   };
   const isResell = (r: Row) => ['true','1','yes'].includes(value(r,'Is Resell','Is Resell ').toLowerCase());
   $: yearsAvailable = [...new Set((data.collections || []).map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
@@ -42,9 +43,9 @@
     const id = value(row,'ID','ID ') || value(row,'Name','name');
     if (!id) return map;
     const user = userMap.get(id);
-    const displayName = value(user,'Name','Name ') || value(row,'Name','name') || id;
+    const displayName = value(user,'Name (Hindi)','Name (Hindi) ','Name','Name ') || value(row,'Name (Hindi)','Name','name') || id;
     const kind = kindOf(row);
-    const old = map.get(id) || { id, name: displayName, amount: 0, kinds: new Set<string>(), entries: 0, detail: '', village: value(user,'Village'), photo: value(user,'Photo') };
+    const old = map.get(id) || { id, name: displayName, amount: 0, kinds: new Set<string>(), entries: 0, detail: '', village: value(user,'Village'), photo: value(user,'Photo','Photo URL','Image') };
     if (kind === 'Cash') old.amount += amount(value(row,'Amount','amount'));
     old.kinds.add(kind);
     old.entries++;
