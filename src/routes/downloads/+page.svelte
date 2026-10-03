@@ -15,3 +15,10 @@
   <p class="notice" role="note">This page links to the public records currently available in the portal. Direct PDF or receipt downloads will appear here when published links are provided.</p>
   <a class="back-link" href="/">← Back to public ledger</a>
 </main>
+<nav class="bottom-nav" aria-label="Main navigation">
+  <a href="/"><span class="nav-icon">⌂</span><span>Home</span></a>
+  <a href="/#contributors"><span class="nav-icon">♙</span><span>Contributors</span></a>
+  <a href="/#expenses"><span class="nav-icon">▤</span><span>Expenses</span></a>
+  <a href="/decade/"><span class="nav-icon">◷</span><span>Journey</span></a>
+  <a class="active" href="/downloads/" aria-current="page"><span class="nav-icon">☰</span><span>Downloads</span></a>
+</nav>
