@@ -11,8 +11,7 @@
   let error = '';
   let selectedYear = String(new Date().getFullYear());
   let selectedPortalYearValue = '';
-  let language: 'en' | 'hi' = 'en';
-  const unsubscribeLanguage = portalLanguage.subscribe(value => { language = value; });
+  $: language = $portalLanguage;
   let query = '';
   let filter = 'All';
   const value = (row: Row, ...keys: string[]) => {
@@ -51,7 +50,7 @@
   onMount(() => {
     initPortalLanguage();
     void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); unsubscribeLanguage(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
 <svelte:head><title>{language === 'hi' ? 'खर्च — छठ पूजा' : 'Expenses — Chhath Puja'}</title><meta name="description" content="Browse recorded expenses for Shaharpura Chhath Puja." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>{language === 'hi' ? 'पारदर्शिता पोर्टल' : 'Transparency Portal'}</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === 'en' ? 'EN / हिंदी' : 'हिंदी / EN'}</button><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label={language === 'hi' ? 'वर्ष चुनें' : 'Select year'}>{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
