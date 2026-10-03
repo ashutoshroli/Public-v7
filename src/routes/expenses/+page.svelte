@@ -2,6 +2,7 @@
   import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
+  import { portalLanguage, togglePortalLanguage, initPortalLanguage } from '$lib/stores/language';
   type Row = Record<string, unknown>;
   type PortalData = { expenses?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -10,6 +11,8 @@
   let error = '';
   let selectedYear = String(new Date().getFullYear());
   let selectedPortalYearValue = '';
+  let language: 'en' | 'hi' = 'en';
+  const unsubscribeLanguage = portalLanguage.subscribe(value => { language = value; });
   let query = '';
   let filter = 'All';
   const value = (row: Row, ...keys: string[]) => {
@@ -41,13 +44,14 @@
   const unsubscribeError = portalError.subscribe((value) => { error = value; });
   const unsubscribeYear = selectedPortalYear.subscribe(value => { selectedPortalYearValue = value; });
   onMount(() => {
+    initPortalLanguage();
     void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); unsubscribeLanguage(); };
   });</script>
 <svelte:head><title>Expenses — Chhath Puja</title><meta name="description" content="Browse recorded expenses for Shaharpura Chhath Puja." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
+<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === 'en' ? 'EN / हिंदी' : 'हिंदी / EN'}</button><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
 <main class="page">
-  <p class="eyebrow">PUBLIC LEDGER / SPENDING</p><h1>Expenses<span>.</span></h1><p class="lede">Browse recorded spending and filter transactions by year, category or description.</p>
+  <p class="eyebrow">PUBLIC LEDGER / SPENDING</p><h1>{language === 'hi' ? 'खर्च' : 'Expenses'}<span>.</span></h1><p class="lede">{language === 'hi' ? 'दर्ज खर्च देखें और वर्ष, श्रेणी या विवरण से फ़िल्टर करें।' : 'Browse recorded spending and filter transactions by year, category or description.'}</p>
   <section class="summary expense-summary"><article class="metric expense-total-card"><span class="metric-label">Total expenses · {selectedYear}</span><strong>{money(total)}</strong><span class="metric-note">{records.length} matching records</span></article><article class="metric"><span class="metric-label">Transactions</span><strong>{records.length}</strong><span class="metric-note">Matching records</span></article></section>
   <label class="search full-search"><span aria-hidden="true">⌕</span><input bind:value={query} placeholder="Search expenses…" aria-label="Search expenses" /></label>
   <div class="filter-strip" aria-label="Filter by category">{#each ['All','Material','Service','Other'] as f}<button class:active={filter===f} onclick={()=>filter=f}>{f}</button>{/each}</div>
