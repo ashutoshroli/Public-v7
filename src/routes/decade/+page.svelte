@@ -58,3 +58,10 @@
   <section class="journey-feature" aria-live="polite"><p class="eyebrow">YEAR IN FOCUS</p><strong class="journey-year">{active}</strong><h2>One community. A shared commitment.</h2><p>Every contribution and every recorded expense is part of our shared story.</p><div class="journey-stat"><span>Contribution records{loading ? ' · Loading' : ''}</span><strong>{counts}</strong></div></section>
   <a class="back-link" href="/">← Back to public ledger</a>
 </main>
+<nav class="bottom-nav" aria-label="Main navigation">
+  <a href="/"><span class="nav-icon">⌂</span><span>Home</span></a>
+  <a href="/#contributors"><span class="nav-icon">♙</span><span>Contributors</span></a>
+  <a href="/#expenses"><span class="nav-icon">▤</span><span>Expenses</span></a>
+  <a class="active" href="/decade/" aria-current="page"><span class="nav-icon">◷</span><span>Journey</span></a>
+  <a href="/downloads/"><span class="nav-icon">☰</span><span>Menu</span></a>
+</nav>
