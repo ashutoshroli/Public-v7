@@ -68,7 +68,7 @@ initPortalLanguage();
   <title>Our Journey — Chhath Puja</title>
   <meta name="description" content="Explore the Shaharpura Chhath Puja community's journey by year." />
 </svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === "hi" ? "English" : "हिंदी"}</button><a class="language" href="/">{language === "hi" ? "← होम" : "← Home"}</a></div></header>
+<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>{language === 'hi' ? 'पारदर्शिता पोर्टल' : 'Transparency Portal'}</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === "hi" ? "English" : "हिंदी"}</button><a class="language" href="/">{language === "hi" ? "← होम" : "{language === 'hi' ? '← होम' : '← Home'}"}</a></div></header>
 <main class="page journey-page">
   <p class="eyebrow">OUR JOURNEY / 2017—2026</p>
   <h1>{language === 'hi' ? 'एक दशक से<br /><span>साथ निभाते हुए।</span>' : 'A decade of<br /><span>showing up.</span>'}</h1>
