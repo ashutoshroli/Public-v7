@@ -98,7 +98,7 @@
   <div class="header-actions">
     <button class="language" type="button" onclick={togglePortalLanguage} aria-label={language === 'hi' ? 'भाषा बदलें' : 'Switch language'}>{language === 'en' ? 'EN / हिंदी' : 'हिंदी / EN'}</button>
     <label class="year-picker"><span class="sr-only">Select year</span>
-      <select bind:value={selectedYear} aria-label="Select year">
+      <select bind:value={selectedYear} aria-label={language === 'hi' ? 'वर्ष चुनें' : 'Select year'}>
         {#each years as y}<option value={y}>{y}</option>{/each}
       </select>
     </label>
@@ -117,9 +117,9 @@
 
   {#if error}<div class="notice" role="status">{error} <button onclick={loadData} disabled={loading}>{language === 'hi' ? 'फिर प्रयास करें' : 'Retry'}</button></div>{/if}
   {#if loading}
-    <div class="loading" aria-label="Loading public records"><span></span><span></span><span></span></div>
+    <div class="loading" aria-label={language === 'hi' ? 'सार्वजनिक रिकॉर्ड लोड हो रहे हैं' : 'Loading public records'}><span></span><span></span><span></span></div>
   {:else if hasLoaded}
-    <section class="summary" aria-label="Financial summary">
+    <section class="summary" aria-label={language === 'hi' ? 'वित्तीय सारांश' : 'Financial summary'}>
       <article class="budget-card">
         <p class="eyebrow">{language === 'hi' ? 'कुल बजट' : 'TOTAL BUDGET'} · {selectedYear}</p>
         <strong>{money(budget)}</strong>
@@ -142,7 +142,7 @@
     <a href="/decade/">{language === 'hi' ? 'यात्रा देखें' : 'Explore journey'} <span aria-hidden="true">↗</span></a>
   </section>
 
-  <nav class="quick-links" aria-label="Portal sections">
+  <nav class="quick-links" aria-label={language === 'hi' ? 'पोर्टल अनुभाग' : 'Portal sections'}>
     <a href="/contributors/" >{language === 'hi' ? 'योगदानकर्ता' : 'Contributors'} <span>↗</span></a>
     <a href="/expenses/" >{language === 'hi' ? 'खर्च' : 'Expenses'} <span>↗</span></a>
     <a href="/decade/" >{language === 'hi' ? 'हमारी यात्रा' : 'Our Journey'} <span>↗</span></a>
