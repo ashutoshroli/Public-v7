@@ -2,7 +2,6 @@
   import './app.css';
   import { onMount } from 'svelte';
   import { listenForSubscriptionChange } from '$lib/push';
-  import LanguageToggle from '$lib/components/LanguageToggle.svelte';
   let { children } = $props();
   onMount(() => {
     let stopPushListener = () => {};
@@ -11,7 +10,5 @@
     return () => stopPushListener();
   });
 </script>
-
-<LanguageToggle />
 
 {@render children()}
