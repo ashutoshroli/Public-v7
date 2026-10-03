@@ -67,3 +67,16 @@
     </section>
   </div>
 {/if}
+
+<style>
+  .notification-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem; margin-bottom:.75rem; }
+  .notification-toolbar strong { flex:1 1 100%; }
+  .notification-list { display:grid; gap:.6rem; max-height:42vh; overflow:auto; margin:.5rem 0 1rem; text-align:left; }
+  .notification-item { display:grid; gap:.3rem; padding:.8rem; border:1px solid var(--border, #e5e7eb); border-radius:.8rem; background:var(--card, #fff); color:var(--text, #1f2937); }
+  .notification-item.notification-unread { border-color:#f27a1a; background:rgba(242,122,26,.07); }
+  .notification-item p { margin:0; font-size:.9rem; }
+  .notification-item small { opacity:.7; font-size:.75rem; }
+  .notification-item a { justify-self:start; font-weight:700; color:#c65b08; }
+  .notification-badge { display:inline-grid; place-items:center; min-width:1.25rem; height:1.25rem; padding:0 .25rem; border-radius:999px; background:#c65b08; color:white; font-size:.75rem; }
+  .menu-secondary:disabled { opacity:.45; cursor:not-allowed; }
+</style>
