@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[] };
@@ -58,4 +59,4 @@
   {/if}
   <a class="back-link" href="/">← Back to home</a>
 </main>
-<nav class="bottom-nav" aria-label="Main navigation"><a href="/"><span class="nav-icon">⌂</span><span>Home</span></a><a class="active" href="/contributors/" aria-current="page"><span class="nav-icon">♙</span><span>Contributors</span></a><a href="/expenses/"><span class="nav-icon">▤</span><span>Expenses</span></a><a href="/decade/"><span class="nav-icon">◷</span><span>Journey</span></a><a href="/downloads/"><span class="nav-icon">☰</span><span>Menu</span></a></nav>
+<BottomNav />
