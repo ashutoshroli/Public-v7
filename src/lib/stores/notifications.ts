@@ -27,6 +27,16 @@ export function clearAll() { save([]); items.set([]); }
 export function initInbox(): () => void {
   refreshInbox();
   const onStorage = (event: StorageEvent) => { if (event.key === KEY) refreshInbox(); };
+  const onServiceWorkerMessage = (event: MessageEvent) => {
+    const data = event.data as { type?: string; title?: string; body?: string; url?: string } | null;
+    if (!data) return;
+    if (data.type === 'push-received') refreshInbox();
+    if (data.type === 'notification-received' && data.title) addNotification({ title: data.title, body: data.body, url: data.url });
+  };
   if (typeof window !== 'undefined') window.addEventListener('storage', onStorage);
-  return () => { if (typeof window !== 'undefined') window.removeEventListener('storage', onStorage); };
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', onServiceWorkerMessage);
+  return () => {
+    if (typeof window !== 'undefined') window.removeEventListener('storage', onStorage);
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) navigator.serviceWorker.removeEventListener('message', onServiceWorkerMessage);
+  };
 }
