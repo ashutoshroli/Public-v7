@@ -17,8 +17,8 @@
   const value = (row: Row, ...keys: string[]) => {
     for (const key of keys) {
       if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]).trim();
-      const norm = key.trim().toLowerCase().replace(/\\s+/g,' ');
-      const actual = Object.keys(row).find(k => k.trim().toLowerCase().replace(/\\s+/g,' ') === norm);
+      const norm = key.trim().toLowerCase().replace(/\s+/g,' ');
+      const actual = Object.keys(row).find(k => k.trim().toLowerCase().replace(/\s+/g,' ') === norm);
       if (actual && row[actual] !== undefined && row[actual] !== null && String(row[actual]).trim()) return String(row[actual]).trim();
     }
     return '';
@@ -30,6 +30,9 @@
   const money = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
   const yearOf = (r: Row) => value(r, 'Year', 'year');
   const byYear = (rows: Row[] = []) => rows.filter(r => yearOf(r) === selectedYear);
+  const isResell = (r: Row) => ['true','1','yes'].includes(value(r,'Is Resell').toLowerCase());
+  const isCash = (r: Row) => ['1','cash','money','monetary',''].includes(value(r,'Contribution Type','Type','type').toLowerCase());
+  $: userMap = new Map((data.users || []).map(u => [value(u,'ID','ID '),u]).filter(([id]) => !!id) as [string,Row][]);
   $: availableYears = [...new Set([...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])].map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b) => Number(b)-Number(a));
   $: years = availableYears.length ? availableYears : [String(new Date().getFullYear())];
   $: if (hasLoaded && availableYears.length && !availableYears.includes(selectedYear)) selectedYear = availableYears[0];
@@ -37,22 +40,24 @@
   $: if (yearInitialized && selectedYear) selectedPortalYear.set(selectedYear);
   $: collections = byYear(data.collections || []);
   $: expenses = byYear(data.expenses || []);
-  $: contributors = collections.reduce((map, row) => {
-    const name = value(row, 'Name', 'name') || 'Community contribution';
-    const key = name.toLocaleLowerCase();
-    const old = map.get(key) || { name, amount: 0, type: '' };
-    old.amount += amount(value(row, 'Amount', 'amount'));
+  $: contributors = collections.filter(row => !isResell(row)).reduce((map, row) => {
+    const id = value(row,'ID','ID ') || value(row,'Name','name');
+    if (!id) return map;
+    const user = userMap.get(id);
+    const name = value(user,'Name (Hindi)','Name','Name ') || value(row,'Name (Hindi)','Name','name') || id;
+    const old = map.get(id) || { name, amount: 0, type: '' };
+    if (isCash(row)) old.amount += amount(value(row,'Amount','amount'));
     old.type = value(row, 'Contribution Type', 'Type', 'type') || old.type;
-    map.set(key, old);
+    map.set(id, old);
     return map;
   }, new Map<string, {name: string; amount: number; type: string}>());
-  $: collectionTotal = collections.reduce((sum, row) => sum + amount(value(row, 'Amount', 'amount')), 0);
+  $: collectionTotal = collections.filter(row => !isResell(row) && isCash(row)).reduce((sum, row) => sum + amount(value(row, 'Amount', 'amount')), 0);
   $: expenseTotal = expenses.reduce((sum, row) => sum + amount(value(row, 'Amount', 'amount')), 0);
   $: loanRows = (data.loans || []).filter(r => yearOf(r) === String(Number(selectedYear) - 1));
   $: returnedLoans = loanRows.reduce((sum, row) => {
-    const principal = amount(value(row, 'Amount', 'amount'));
-    const rate = amount(value(row, 'Interest Rate', 'Intrest Rate'));
-    const tenure = amount(value(row, 'Tenure'));
+    const principal = amount(value(row, 'Amount', 'Principal', 'Loan Amount', 'amount'));
+    const rate = amount(value(row, 'Interest Rate', 'Intrest Rate', 'Monthly Interest Rate'));
+    const tenure = amount(value(row, 'Tenure', 'Tenure (Months)', 'Duration', 'Months'));
     return sum + principal + principal * rate / 100 * tenure;
   }, 0);
   $: budget = collectionTotal + returnedLoans;
