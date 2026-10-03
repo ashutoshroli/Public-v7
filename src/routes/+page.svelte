@@ -1,6 +1,7 @@
 <script lang="ts">
   import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
+  import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
 
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[]; expenses?: Row[]; loans?: Row[]; committee?: Row[]; users?: Row[] };
@@ -9,6 +10,7 @@
   let loading = true;
   let error = '';
   let selectedYear = String(new Date().getFullYear());
+  let yearInitialized = false;
   let query = '';
   let hasLoaded = false;
 
@@ -31,6 +33,8 @@
   $: availableYears = [...new Set([...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])].map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b) => Number(b)-Number(a));
   $: years = availableYears.length ? availableYears : [String(new Date().getFullYear())];
   $: if (hasLoaded && availableYears.length && !availableYears.includes(selectedYear)) selectedYear = availableYears[0];
+  $: if (hasLoaded && availableYears.length && !yearInitialized) { selectedYear = availableYears[0]; yearInitialized = true; }
+  $: if (yearInitialized && selectedYear) selectedPortalYear.set(selectedYear);
   $: collections = byYear(data.collections || []);
   $: expenses = byYear(data.expenses || []);
   $: contributors = collections.reduce((map, row) => {
@@ -55,25 +59,18 @@
   $: utilization = budget > 0 ? Math.min(100, expenseTotal / budget * 100) : 0;
   $: filteredContributors = [...contributors.values()].sort((a,b) => b.amount-a.amount);
 
+  const unsubscribeData = portalData.subscribe(value => { data = value as PortalData; if (Object.keys(value).length) hasLoaded = true; });
+  const unsubscribeLoading = portalLoading.subscribe(value => { loading = value; });
+  const unsubscribeError = portalError.subscribe(value => { error = value; });
+  const unsubscribeYear = selectedPortalYear.subscribe(value => { if (value && availableYears.includes(value)) selectedYear = value; });
   async function loadData() {
-    loading = true;
-    error = '';
-    try {
-      const response = await fetch(API + '?action=portalData');
-      if (!response.ok) throw new Error('Portal data is temporarily unavailable.');
-      const raw = await response.json();
-      const next = raw.data && typeof raw.data === 'object' ? raw.data : raw;
-      if (!next || typeof next !== 'object') throw new Error('The public data response was not in the expected format.');
-      data = next;
-      hasLoaded = true;
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'Unable to load public records.';
-    } finally {
-      loading = false;
-    }
+    try { await loadPortalData(); }
+    catch (e) { error = e instanceof Error ? e.message : 'Unable to load public records.'; }
   }
-
-  onMount(() => { void loadData(); });
+  onMount(() => {
+    void loadData();
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
+  });
 </script>
 
 <svelte:head>
