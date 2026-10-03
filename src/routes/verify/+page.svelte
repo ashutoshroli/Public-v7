@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { portalLanguage, togglePortalLanguage, initPortalLanguage } from '$lib/stores/language';
+  let language: 'en' | 'hi' = 'en';
+  const unsubLang = portalLanguage.subscribe(v => language = v);
   import { onMount } from 'svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
   import { loadPortalData, portalData, portalLoading } from '$lib/stores/portal';
@@ -15,14 +18,14 @@
   $: parts=recordId.split('-');$: rowIndex=parts.length>=3?parts.slice(2).join('-'):'';
   $: collection=collections.find((r,i)=>value(r,'Year')===year&&(value(r,'__rowIndex')===rowIndex||String(i)===rowIndex));
   $: personId=value(collection,'ID','Name');$: user=users.find(u=>value(u,'ID')===personId);
-  $: name=value(user,'Name','Name (Hindi)')||value(collection,'Name','Name (Hindi)')||'';
-  $: amount=value(collection,'Amount');$: detail=value(collection,'Detail');$: village=value(user,'Village','Village (Hindi)');
+  $: name=language === 'hi' ? (value(user,'Name (Hindi)','Name')||value(collection,'Name (Hindi)','Name')||'') : (value(user,'Name')||value(collection,'Name')||value(user,'Name (Hindi)')||'');
+  $: amount=value(collection,'Amount');$: detail=value(collection,'Detail');$: village=language === 'hi' ? value(user,'Village (Hindi)','Village') : value(user,'Village','Village (Hindi)');
   const u=portalData.subscribe(v=>data=v as Record<string,unknown>);
   const l=portalLoading.subscribe(v=>loading=v);
-  onMount(()=>{void loadPortalData();return()=>{u();l();};});
+  onMount(()=>{initPortalLanguage();void loadPortalData();return()=>{u();l();unsubLang();};});
 </script>
 <svelte:head><title>Document verification — Chhath Puja</title><meta name="description" content="Verify a public Chhath Puja portal document."/></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
+<header class="topbar"><a class="brand" href="/"><span class="sun">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === 'hi' ? 'English' : 'हिंदी'}</button><a class="language" href="/">{language === 'hi' ? '← होम' : '← Home'}</a></div></header>
 <main class="page"><p class="eyebrow">PUBLIC RECORDS</p><h1>Document verification<span>.</span></h1><p class="lede">Check a receipt or public document against the portal's published generated-file index.</p>
 <section class="records verification" aria-live="polite">
 {#if loading}<p>Checking the public record…</p>{:else if !recordId}<h2>No record ID provided</h2><p>Open the verification link or scan the QR code printed on the document.</p>{:else if !file}<h2 class="verdict">Record not found</h2><p>No matching document is present in the current public index. This does not prove that a document is fraudulent; contact the committee to confirm.</p><p class="record-id">Reference: {recordId}</p>{:else}<p class="eyebrow">PUBLIC INDEX MATCH</p><h2 class="verdict">Record found</h2><dl><dt>Document type</dt><dd>{type||'Public document'}</dd><dt>Year</dt><dd>{year||'—'}</dd>{#if name}<dt>Name</dt><dd>{name}</dd>{/if}{#if village}<dt>Village</dt><dd>{village}</dd>{/if}{#if amount}<dt>Recorded amount</dt><dd>{amount}</dd>{/if}{#if detail}<dt>Details</dt><dd>{detail}</dd>{/if}</dl><p class="record-id">Reference: {recordId}</p>{/if}
