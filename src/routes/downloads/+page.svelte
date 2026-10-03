@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
+  import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
   import BottomNav from '$lib/components/BottomNav.svelte';
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[]; users?: Row[]; generatedFiles?: Row[]; generated_files?: Row[]; loanConsents?: Row[]; loan_consents?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
-  let data: PortalData = {}, loading = true, error = '', query = '', selectedYear = '';
+  let data: PortalData = {}, loading = true, error = '', query = '', selectedYear = '', selectedPortalYearValue = '';
   const value = (r: Row | undefined, ...keys: string[]) => {
     if (!r) return '';
     for (const key of keys) {
@@ -22,12 +22,14 @@
   $: generated = data.generatedFiles || data.generated_files || [];
   $: consents = data.loanConsents || data.loan_consents || [];
   $: years = [...new Set([...(data.collections || []).map(r=>value(r,'Year')),...generated.map(r=>value(r,'year','Year')),...consents.map(r=>value(r,'year','Year'))].filter(y=>/^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
+  $: if (years.length && selectedPortalYearValue && years.includes(selectedPortalYearValue)) selectedYear = selectedPortalYearValue;
   $: if (years.length && !years.includes(selectedYear)) selectedYear = years[0];
+  $: if (years.length && selectedYear) selectedPortalYear.set(selectedYear);
   $: documents = [
     ...(data.collections || []).flatMap((r,i) => {
       if (resell(r)) return [];
       const year = value(r,'Year'), id = value(r,'ID','Name'), user = userMap.get(id);
-      const name = value(user,'Name') || value(r,'Name') || id || 'Contribution';
+      const name = value(user,'Name (Hindi)','Name') || value(r,'Name (Hindi)','Name') || id || 'Contribution';
       const type = value(r,'Contribution Type');
       const docType = type === '2' ? 'samaan' : type === '3' ? 'receipt_work' : value(r,'Certificate','Is Certificate').toLowerCase() === 'true' ? 'certificate' : 'receipt';
       const rowIndex = value(r,'__rowIndex') || String(i);
@@ -52,9 +54,10 @@
   const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });
   const unsubscribeLoading = portalLoading.subscribe((value) => { loading = value; });
   const unsubscribeError = portalError.subscribe((value) => { error = value; });
+  const unsubscribeYear = selectedPortalYear.subscribe(value => { selectedPortalYearValue = value; });
   onMount(() => {
     void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
 <svelte:head><title>Downloads — Chhath Puja</title><meta name="description" content="Public receipts, certificates and consent documents." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
