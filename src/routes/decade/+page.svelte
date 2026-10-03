@@ -26,10 +26,11 @@
   const yearOf = (row: Row) => value(row,'Year','year');
   const amountOf = (v: unknown) => { const n = Number(String(v ?? '').replace(/[^0-9.-]/g,'')); return Number.isFinite(n) ? n : 0; };
   const isResell = (row: Row) => ['true','1','yes'].includes(value(row,'Is Resell').toLowerCase());
+  const isCash = (row: Row) => ['1','cash','money','monetary',''].includes(value(row,'Contribution Type','Type').toLowerCase());
   function updateCount(year: number) {
     const rows = (data.collections || []).filter(row => yearOf(row) === String(year) && !isResell(row));
     counts = rows.length;
-    cashTotal = rows.reduce((sum,row) => sum + (['2','3'].includes(value(row,'Contribution Type')) ? 0 : amountOf(value(row,'Amount'))),0);
+    cashTotal = rows.reduce((sum,row) => sum + (isCash(row) ? amountOf(value(row,'Amount')) : 0),0);
     peopleCount = new Set(rows.map(row => value(row,'ID','Name')).filter(Boolean)).size;
   }
 
@@ -45,9 +46,10 @@
   });
   const unsubscribeLoading = portalLoading.subscribe(value => { loading = value; });
   const unsubscribeError = portalError.subscribe(value => { error = value; });
+  const unsubscribeYear = selectedPortalYear.subscribe(value => { const year = Number(value); if (Number.isFinite(year) && years.includes(year)) { active = year; updateCount(year); } });
   onMount(() => {
     void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });
 
   function selectYear(year: number) {
