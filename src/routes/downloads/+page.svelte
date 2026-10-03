@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
   import { lang } from '$lib/stores/lang';
+  import { initPortalLanguage } from '$lib/stores/language';
   import { peopleInVillage, downloadsForPerson } from '$lib/api/derive';
   import type { PortalData, UserRow } from '$lib/api/schema';
   import BottomNav from '$lib/components/BottomNav.svelte';
@@ -41,7 +42,7 @@
   const unsubData = portalData.subscribe(v => data = v as PortalData);
   const unsubLoading = portalLoading.subscribe(v => loading = v);
   const unsubError = portalError.subscribe(v => error = v);
-  onMount(() => { void loadPortalData().catch(e => error = e instanceof Error ? e.message : 'Unable to load public records.'); return () => { unsubData(); unsubLoading(); unsubError(); }; });
+  onMount(() => { initPortalLanguage(); void loadPortalData().catch(e => error = e instanceof Error ? e.message : 'Unable to load public records.'); return () => { unsubData(); unsubLoading(); unsubError(); }; });
 </script>
 <svelte:head><title>{text('Download Center — Chhath Puja','डाउनलोड केंद्र — छठ पूजा')}</title><meta name="description" content="Find public receipts, certificates and consent documents by village and person."/></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>{text('Transparency Portal','पारदर्शिता पोर्टल')}</small></span></a><button class="language" type="button" onclick={() => lang.toggle()}>{text('हिंदी','English')}</button></header>
