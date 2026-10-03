@@ -23,7 +23,7 @@
   $: members = rows.map(r => {
     const id = value(r,'ID','Name');
     const u = userMap.get(id);
-    return { id, name: value(u,'Name') || value(r,'Name') || id, hindi: value(u,'Name (Hindi)'), role: value(r,'View Role','Role') || value(u,'Designation'), roleHindi: value(r,'View Role (Hindi)','Role (Hindi)') || value(u,'Designation (Hindi)'), village: value(u,'Village'), villageHindi: value(u,'Village (Hindi)'), year: value(r,'Year'), mobile: value(u,'Mobile') };
+    return { id, name: value(u,'Name (Hindi)','Name') || value(r,'Name (Hindi)','Name') || id, hindi: value(u,'Name (Hindi)'), role: value(r,'View Role','Role') || value(u,'Designation'), roleHindi: value(r,'View Role (Hindi)','Role (Hindi)') || value(u,'Designation (Hindi)'), village: value(u,'Village'), villageHindi: value(u,'Village (Hindi)'), year: value(r,'Year'), mobile: value(u,'Mobile') };
   }).filter(m => m.name || m.role).sort((a,b)=>Number(b.year)-Number(a.year));
   const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });
   const unsubscribeLoading = portalLoading.subscribe((value) => { loading = value; });
