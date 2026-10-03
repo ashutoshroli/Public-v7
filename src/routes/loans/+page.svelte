@@ -50,11 +50,13 @@
       return {id:gid,name:value(gu,'Name (Hindi)','Name') || gid,village:value(gu,'Village'),isContributor,isCommittee};
       });
     });
-    return {id,name:value(user,'Name') || value(row,'Name') || id || 'Loan record',loanId,principal,rate,tenure,interest,total:principal+interest,year:loanYear,guarantors};
+    const repaid = amount(value(row,'Amount Returned','Returned Amount','Repaid Amount','Total Repaid','Paid Amount'));
+    const outstanding = Math.max(0, principal + interest - repaid);
+    return {id,name:value(user,'Name (Hindi)','Name') || value(row,'Name (Hindi)','Name') || id || 'Loan record',loanId,principal,rate,tenure,interest,total:principal+interest,repaid,outstanding,year:loanYear,guarantors};
   });
   $: visible = records.filter(r => {
     const q = query.toLowerCase();
-    const status = r.principal > 0 ? 'Active' : 'Unspecified';
+    const status = r.outstanding <= 0 && r.principal > 0 ? 'Repaid' : r.repaid > 0 ? 'Partially repaid' : r.principal > 0 ? 'Active' : 'Unspecified';
     return (filter === 'All' || status === filter) && [r.name,r.loanId,r.year,...r.guarantors.map(g=>g.name)].join(' ').toLowerCase().includes(q);
   });
   $: totalLoan = visible.reduce((sum,r)=>sum+r.principal,0);
@@ -77,7 +79,7 @@
   </section>
   
   <label class="search full-search"><span aria-hidden="true">⌕</span><input bind:value={query} placeholder="Search borrower or purpose…" aria-label="Search loans" /></label>
-  <div class="filter-strip" aria-label="Filter loan status">{#each ['All','Active','Unspecified'] as f}<button class:active={filter===f} onclick={()=>filter=f}>{f}</button>{/each}</div>
+  <div class="filter-strip" aria-label="Filter loan status">{#each ['All','Active','Partially repaid','Repaid','Unspecified'] as f}<button class:active={filter===f} onclick={()=>filter=f}>{f}</button>{/each}</div>
   {#if loading}<div class="loading" aria-label="Loading loans"><span></span><span></span><span></span></div>{:else if error}<p class="notice" role="status">{error}</p>{:else}
     <section class="section-head"><div><p class="eyebrow">LOAN RECORDS · {visible.length}</p><h2>Loans & repayments</h2></div></section>
     <section class="records" aria-label="Loan records">{#each visible as row,i}<article class="record"><span class="rank">{String(i+1).padStart(2,'0')}</span><div class="record-main"><strong>{row.name}</strong><small>{row.year}{row.loanId ? ' · '+row.loanId : ''} · {row.rate}%/month · {row.tenure} months</small><small>Principal {money(row.principal)} · Interest {money(row.interest)}</small>{#if row.guarantors.length}<small>Guarantors: {row.guarantors.map(g=>g.name+(g.isCommittee?' ⚠ Committee member': '')).join(', ')}</small>{:else}<small>No guarantors recorded</small>{/if}</div><strong class="record-amount">{money(row.total)}</strong></article>{:else}<p class="empty">No loan records match these filters.</p>{/each}</section>
