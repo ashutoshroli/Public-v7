@@ -13,7 +13,12 @@
   let query = '';
   let filter = 'All';
   const value = (row: Row, ...keys: string[]) => {
-    for (const key of keys) if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]);
+    for (const key of keys) {
+      if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]).trim();
+      const normalized = key.trim().toLowerCase().replace(/\s+/g, ' ');
+      const actual = Object.keys(row).find(k => k.trim().toLowerCase().replace(/\s+/g, ' ') === normalized);
+      if (actual && row[actual] !== undefined && row[actual] !== null && String(row[actual]).trim()) return String(row[actual]).trim();
+    }
     return '';
   };
   const amount = (v: unknown) => {
@@ -23,7 +28,7 @@
   const money = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
   const yearOf = (r: Row) => value(r, 'Year', 'year');
   const categoryOf = (r: Row) => value(r, 'Category', 'category') || 'Other';
-  const descriptionOf = (r: Row) => value(r,'Discription','Discription (Hindi)','Description','Description (Hindi)','description','Name') || 'Expense record';
+  const descriptionOf = (r: Row) => value(r,'Discription (Hindi)','Discription','Description (Hindi)','Description','description','Name') || 'Expense record';
   $: yearsAvailable = [...new Set((data.expenses || []).map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
   $: if (yearsAvailable.length && !yearsAvailable.includes(selectedYear)) selectedYear = yearsAvailable[0];
   $: if (yearsAvailable.length && selectedPortalYearValue && yearsAvailable.includes(selectedPortalYearValue)) selectedYear = selectedPortalYearValue;
