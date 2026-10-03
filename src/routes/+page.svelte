@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
 
   type Row = Record<string, unknown>;
@@ -135,10 +136,4 @@
   </nav>
   <footer><span>CHHATH PUJA / TRANSPARENCY</span><span>Faith · Unity · Accountability</span></footer>
 </main>
-<nav class="bottom-nav" aria-label="Main navigation">
-  <a class="active" href="/" aria-current="page"><span class="nav-icon">⌂</span><span>Home</span></a>
-  <a href="/contributors/"><span class="nav-icon">♙</span><span>Contributors</span></a>
-  <a href="/expenses/"><span class="nav-icon">▤</span><span>Expenses</span></a>
-  <a href="/decade/"><span class="nav-icon">◷</span><span>Journey</span></a>
-  <a href="/downloads/"><span class="nav-icon">☰</span><span>Menu</span></a>
-</nav>
+<BottomNav />
