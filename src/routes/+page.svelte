@@ -74,6 +74,8 @@
     catch (e) { error = e instanceof Error ? e.message : 'Unable to load public records.'; }
   }
   onMount(() => {
+    const record = new URLSearchParams(window.location.search).get('record');
+    if (record) { window.location.replace('/verify/?record=' + encodeURIComponent(record)); return; }
     void loadData();
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });
