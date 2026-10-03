@@ -21,7 +21,7 @@
   $: rows = data.committee || [];
   $: users = data.users || [];
   $: userMap = new Map(users.map(u => [value(u,'ID'),u]).filter(([id]) => !!id) as [string,Row][]);
-  $: availableYears = [...new Set(rows.map(r => value(r,'Year')).filter(y => /^20\\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
+  $: availableYears = [...new Set(rows.map(r => value(r,'Year')).filter(y => /^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
   $: if (availableYears.length && !availableYears.includes(selectedYear)) selectedYear = availableYears[0];
   $: if (selectedYear) selectedPortalYear.set(selectedYear);
   $: members = rows.filter(r => value(r,'Year') === selectedYear).map(r => {
