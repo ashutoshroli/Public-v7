@@ -8,8 +8,10 @@
   const items = [
     { href: '/decade/', label: 'Our Journey', detail: '2017–2026 community history', icon: '◷' },
     { href: '/downloads/', label: 'Downloads', detail: 'Public records and documents', icon: '⇩' },
+    { href: '/committee/', label: 'Committee', detail: 'Committee information', icon: '♙' },
+    { href: '/donate/', label: 'Donate Now', detail: 'Support community Chhath Puja', icon: '♡' },
     { href: '/guide/', label: 'User Guide', detail: 'Portal help and app installation', icon: 'ⓘ' },
-    { href: '/committee/', label: 'Committee', detail: 'Committee information', icon: '♙' }
+    
   ];
   $: activePath = $page.url.pathname;
   let lastPath = activePath;
