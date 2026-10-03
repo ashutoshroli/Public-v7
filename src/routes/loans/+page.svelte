@@ -22,9 +22,10 @@
   const yearOf = (r: Row) => value(r, 'Year', 'year');
   const statusOf = (r: Row) => value(r, 'Status', 'status') || 'Unspecified';
   $: yearsAvailable = [...new Set((data.loans || []).map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
-  $: years = [...new Set([...(yearsAvailable.length ? yearsAvailable : [selectedYear]), 'All'])];
+  $: if (yearsAvailable.length && !yearsAvailable.includes(selectedYear)) selectedYear = yearsAvailable[0];
+  $: years = yearsAvailable.length ? yearsAvailable : [selectedYear];
   $: records = (data.loans || []).filter(row =>
-    (selectedYear === 'All' || yearOf(row) === selectedYear) &&
+    yearOf(row) === selectedYear &&
     (filter === 'All' || statusOf(row).toLowerCase() === filter.toLowerCase()) &&
     [value(row,'Name','Borrower','Person','name'), value(row,'Purpose','Description','Reason','purpose'), statusOf(row)].join(' ').toLowerCase().includes(query.toLowerCase())
   );
@@ -43,7 +44,7 @@
   });
 </script>
 <svelte:head><title>Loans — Chhath Puja</title><meta name="description" content="Browse public loan and repayment records for Shaharpura Chhath Puja." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y === 'All' ? 'All years' : y}</option>{/each}</select></label></div></header>
+<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
 <main class="page">
   <p class="eyebrow">PUBLIC LEDGER / LOANS</p><h1>Loans & Returns<span>.</span></h1><p class="lede">Browse recorded loans and repayment information.</p>
   <section class="summary expense-summary">
