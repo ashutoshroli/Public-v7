@@ -8,8 +8,8 @@
   let loading = true;
   let error = '';
   let selectedYear = String(new Date().getFullYear());
-  let years: string[] = [selectedYear, 'All'];
   let query = '';
+  let hasLoaded = false;
 
   const value = (row: Row, ...keys: string[]) => {
     for (const key of keys) if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]);
@@ -22,6 +22,9 @@
   const money = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
   const yearOf = (r: Row) => value(r, 'Year', 'year');
   const byYear = (rows: Row[] = []) => selectedYear === 'All' ? rows : rows.filter(r => yearOf(r) === selectedYear);
+  $: availableYears = [...new Set([...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])].map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b) => Number(b)-Number(a));
+  $: years = [...new Set([...(availableYears.length ? availableYears : [String(new Date().getFullYear())]), 'All'])];
+  $: if (hasLoaded && selectedYear !== 'All' && availableYears.length && !availableYears.includes(selectedYear)) selectedYear = availableYears[0];
   $: collections = byYear(data.collections || []);
   $: expenses = byYear(data.expenses || []);
   $: contributors = collections.reduce((map, row) => {
@@ -44,23 +47,31 @@
   }, 0);
   $: budget = collectionTotal + returnedLoans;
   $: filteredContributors = [...contributors.values()].filter(c => c.name.toLowerCase().includes(query.toLowerCase())).sort((a,b) => b.amount-a.amount);
-  $: availableYears = [...new Set([...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])].map(yearOf).filter(Boolean))].sort((a,b) => Number(b)-Number(a));
-  onMount(async () => {
+
+  async function loadData() {
+    loading = true;
+    error = '';
     try {
       const response = await fetch(API + '?action=portalData');
       if (!response.ok) throw new Error('Portal data is temporarily unavailable.');
       const raw = await response.json();
-      data = raw.data && typeof raw.data === 'object' ? raw.data : raw;
-      years = [...new Set([...availableYears, String(new Date().getFullYear())])];
-      if (availableYears.length && !availableYears.includes(selectedYear)) selectedYear = availableYears[0];
+      const next = raw.data && typeof raw.data === 'object' ? raw.data : raw;
+      if (!next || typeof next !== 'object') throw new Error('The public data response was not in the expected format.');
+      data = next;
+      hasLoaded = true;
     } catch (e) {
       error = e instanceof Error ? e.message : 'Unable to load public records.';
-    } finally { loading = false; }
-  });
+    } finally {
+      loading = false;
+    }
+  }
+
+  onMount(() => { void loadData(); });
 </script>
 
 <svelte:head>
   <title>Chhath Puja — Transparency Portal</title>
+  <meta name="description" content="Public contribution and expense records for the Shaharpura Chhath Puja committee." />
   <meta name="theme-color" content="#f8f8f5" />
 </svelte:head>
 
@@ -70,11 +81,10 @@
     <span><strong>Chhath Puja</strong><small>Transparency Portal</small></span>
   </a>
   <div class="header-actions">
-    <a class="language" href="?lang=hi" aria-label="Hindi language option">EN / हिंदी</a>
+    <span class="language" aria-label="Language options not available yet">EN / हिंदी</span>
     <label class="year-picker"><span class="sr-only">Select year</span>
       <select bind:value={selectedYear} aria-label="Select year">
-        {#each years as y}<option value={y}>{y}</option>{/each}
-        <option value="All">All years</option>
+        {#each years as y}<option value={y}>{y === 'All' ? 'All years' : y}</option>{/each}
       </select>
     </label>
   </div>
@@ -87,10 +97,10 @@
     <p class="lede">छठ पूजा पारदर्शिता पोर्टल — नवयुवक छठ पूजा समिति</p>
   </section>
 
-  {#if error}<div class="notice" role="status">{error} <button onclick={() => location.reload()}>Retry</button></div>{/if}
+  {#if error}<div class="notice" role="status">{error} <button onclick={loadData} disabled={loading}>Retry</button></div>{/if}
   {#if loading}
     <div class="loading" aria-label="Loading public records"><span></span><span></span><span></span></div>
-  {:else}
+  {:else if hasLoaded}
     <section class="summary" aria-label="Financial summary">
       <article class="budget-card">
         <p class="eyebrow">TOTAL BUDGET · {selectedYear}</p>
@@ -100,7 +110,7 @@
       </article>
       <article class="metric"><span class="metric-label">Collected</span><strong>{money(collectionTotal)}</strong><span class="metric-note">Public contributions</span></article>
       <article class="metric"><span class="metric-label">Expenses</span><strong>{money(expenseTotal)}</strong><span class="metric-note">Recorded spending</span></article>
-      <article class="metric"><span class="metric-label">Past loan return*</span><strong>{money(returnedLoans)}</strong><span class="metric-note">Principal + recorded interest</span></article>
+      <article class="metric"><span class="metric-label">Past loan return*</span><strong>{money(returnedLoans)}</strong><span class="metric-note">Estimated principal + interest</span></article>
     </section>
 
     <section class="section-head" id="contributors">
@@ -123,7 +133,7 @@
       <div><p class="eyebrow">OUTGOING · {expenses.length} RECORDS</p><h2>Recent expenses</h2></div>
       <span class="section-total">{money(expenseTotal)}</span>
     </section>
-    <section class="records">
+    <section class="records" aria-label="Expense records">
       {#each expenses.slice(0, 8) as item, i}
         <article class="record">
           <span class="rank">{String(i+1).padStart(2,'0')}</span>
