@@ -68,7 +68,7 @@
   const unsubscribeData = portalData.subscribe(value => { data = value as PortalData; if (Object.keys(value).length) hasLoaded = true; });
   const unsubscribeLoading = portalLoading.subscribe(value => { loading = value; });
   const unsubscribeError = portalError.subscribe(value => { error = value; });
-  const unsubscribeYear = selectedPortalYear.subscribe(value => { if (value && availableYears.includes(value)) selectedYear = value; });
+  const unsubscribeYear = selectedPortalYear.subscribe(value => { if (value && Array.isArray(availableYears) && availableYears.includes(value)) selectedYear = value; });
   async function loadData() {
     try { await loadPortalData(); }
     catch (e) { error = e instanceof Error ? e.message : 'Unable to load public records.'; }
