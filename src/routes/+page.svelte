@@ -1,5 +1,6 @@
 <script lang="ts">
   import BottomNav from "$lib/components/BottomNav.svelte";
+  import DonatePopup from "$lib/components/DonatePopup.svelte";
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
 
@@ -135,6 +136,7 @@
     <div><p class="eyebrow">2017 — 2026</p><h2>A decade of community service.</h2><p>See how our Chhath Puja journey has grown through the years.</p></div>
     <a href="/decade/">Explore journey <span aria-hidden="true">↗</span></a>
   </section>
+  <div class="donate-popup-entry"><DonatePopup /></div>
   <nav class="quick-links" aria-label="Portal sections">
     <a href="/contributors/">Contributors <span>↗</span></a>
     <a href="/expenses/">Expenses <span>↗</span></a>
