@@ -48,9 +48,9 @@
     const id = value(row,'ID','ID ') || value(row,'Name','name');
     if (!id) return map;
     const user = userMap.get(id);
-    const displayName = value(user,'Name (Hindi)','Name (Hindi) ','Name','Name ') || value(row,'Name (Hindi)','Name','name') || id;
+    const displayName = language === 'hi' ? (value(user,'Name (Hindi)','Name (Hindi) ','Name','Name ') || value(row,'Name (Hindi)','Name','name') || id) : (value(user,'Name','Name ') || value(row,'Name','name') || value(user,'Name (Hindi)') || id);
     const kind = kindOf(row);
-    const old = map.get(id) || { id, name: displayName, amount: 0, kinds: new Set<string>(), entries: 0, detail: '', village: value(user,'Village'), photo: value(user,'Photo','Photo URL','Image') };
+    const old = map.get(id) || { id, name: displayName, amount: 0, kinds: new Set<string>(), entries: 0, detail: '', village: language === 'hi' ? (value(user,'Village (Hindi)') || value(user,'Village')) : (value(user,'Village') || value(user,'Village (Hindi)')), photo: value(user,'Photo','Photo URL','Image') };
     if (kind === 'Cash') old.amount += amount(value(row,'Amount','amount'));
     old.kinds.add(kind);
     old.entries++;
@@ -80,7 +80,7 @@
   <div class="filter-strip" aria-label="Filter by contribution type">{#each ['All','Cash','Material','Service'] as f}<button class:active={filter===f} onclick={()=>filter=f}>{f}</button>{/each}</div>
   {#if loading}<div class="loading" aria-label="Loading contributors"><span></span><span></span><span></span></div>{:else if error}<p class="notice" role="status">{error}</p>{:else}
     <section class="section-head"><div><p class="eyebrow">COMMUNITY · {contributors.length} CONTRIBUTORS</p><h2>Contribution records</h2></div></section>
-    <section class="records" aria-label="All contributors">{#each contributors as c,i}<article class="record"><span class="rank">{String(i+1).padStart(2,'0')}</span><div class="record-main"><strong>{c.name}</strong><small>{[...c.kinds].join(' · ')} · {c.entries} record{c.entries===1?'':'s'}{c.village ? ' · '+c.village : ''}{c.detail ? ' · '+c.detail : ''}</small></div><strong class="record-amount">{money(c.amount)}</strong></article>{:else}<p class="empty">No contributors match these filters.</p>{/each}</section>
+    <section class="records" aria-label="All contributors">{#each contributors as c,i}<article class="record"><span class="rank">{String(i+1).padStart(2,'0')}</span><div class="record-main"><strong>{c.name}</strong><small>{[...c.kinds].map(k => language === 'hi' ? (k === 'Cash' ? 'नकद' : k === 'Material' ? 'सामग्री' : k === 'Service' ? 'सेवा' : 'अन्य') : k).join(' · ')} · {c.entries} record{c.entries===1?'':'s'}{c.village ? ' · '+c.village : ''}{c.detail ? ' · '+c.detail : ''}</small></div><strong class="record-amount">{money(c.amount)}</strong></article>{:else}<p class="empty">No contributors match these filters.</p>{/each}</section>
   {/if}
   <a class="back-link" href="/">← Back to home</a>
 </main>
