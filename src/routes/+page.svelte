@@ -13,7 +13,12 @@
   let hasLoaded = false;
 
   const value = (row: Row, ...keys: string[]) => {
-    for (const key of keys) if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]);
+    for (const key of keys) {
+      if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]).trim();
+      const norm = key.trim().toLowerCase().replace(/\\s+/g,' ');
+      const actual = Object.keys(row).find(k => k.trim().toLowerCase().replace(/\\s+/g,' ') === norm);
+      if (actual && row[actual] !== undefined && row[actual] !== null && String(row[actual]).trim()) return String(row[actual]).trim();
+    }
     return '';
   };
   const amount = (v: unknown) => {
@@ -22,10 +27,10 @@
   };
   const money = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
   const yearOf = (r: Row) => value(r, 'Year', 'year');
-  const byYear = (rows: Row[] = []) => selectedYear === 'All' ? rows : rows.filter(r => yearOf(r) === selectedYear);
+  const byYear = (rows: Row[] = []) => rows.filter(r => yearOf(r) === selectedYear);
   $: availableYears = [...new Set([...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])].map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b) => Number(b)-Number(a));
-  $: years = [...new Set([...(availableYears.length ? availableYears : [String(new Date().getFullYear())]), 'All'])];
-  $: if (hasLoaded && selectedYear !== 'All' && availableYears.length && !availableYears.includes(selectedYear)) selectedYear = availableYears[0];
+  $: years = availableYears.length ? availableYears : [String(new Date().getFullYear())];
+  $: if (hasLoaded && availableYears.length && !availableYears.includes(selectedYear)) selectedYear = availableYears[0];
   $: collections = byYear(data.collections || []);
   $: expenses = byYear(data.expenses || []);
   $: contributors = collections.reduce((map, row) => {
@@ -39,7 +44,7 @@
   }, new Map<string, {name: string; amount: number; type: string}>());
   $: collectionTotal = collections.reduce((sum, row) => sum + amount(value(row, 'Amount', 'amount')), 0);
   $: expenseTotal = expenses.reduce((sum, row) => sum + amount(value(row, 'Amount', 'amount')), 0);
-  $: loanRows = (data.loans || []).filter(r => selectedYear === 'All' || yearOf(r) === String(Number(selectedYear) - 1));
+  $: loanRows = (data.loans || []).filter(r => yearOf(r) === String(Number(selectedYear) - 1));
   $: returnedLoans = loanRows.reduce((sum, row) => {
     const principal = amount(value(row, 'Amount', 'amount'));
     const rate = amount(value(row, 'Interest Rate', 'Intrest Rate'));
@@ -86,7 +91,7 @@
     <span class="language" aria-label="Language options not available yet">EN / हिंदी</span>
     <label class="year-picker"><span class="sr-only">Select year</span>
       <select bind:value={selectedYear} aria-label="Select year">
-        {#each years as y}<option value={y}>{y === 'All' ? 'All years' : y}</option>{/each}
+        {#each years as y}<option value={y}>{y}</option>{/each}
       </select>
     </label>
   </div>
