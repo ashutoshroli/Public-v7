@@ -46,6 +46,7 @@
     return sum + principal + principal * rate / 100 * tenure;
   }, 0);
   $: budget = collectionTotal + returnedLoans;
+  $: utilization = budget > 0 ? Math.min(100, expenseTotal / budget * 100) : 0;
   $: filteredContributors = [...contributors.values()].filter(c => c.name.toLowerCase().includes(query.toLowerCase())).sort((a,b) => b.amount-a.amount);
 
   async function loadData() {
@@ -93,6 +94,9 @@
 <main class="page">
   <section class="intro">
     <p class="eyebrow"><span class="live-dot"></span> PUBLIC LEDGER <span class="separator">/</span> SHAHARPURA</p>
+    <div class="hero-image" role="img" aria-label="Sunrise over a river, representing Chhath Puja">
+      <div><p>आस्था • सहयोग • पारदर्शिता</p><h2>छठ पूजा</h2><p>आस्था · सहयोग · पारदर्शिता</p></div>
+    </div>
     <h1>Faith deserves<br /><span>transparency.</span></h1>
     <p class="lede">छठ पूजा पारदर्शिता पोर्टल — नवयुवक छठ पूजा समिति</p>
   </section>
@@ -105,20 +109,25 @@
       <article class="budget-card">
         <p class="eyebrow">TOTAL BUDGET · {selectedYear}</p>
         <strong>{money(budget)}</strong>
-        <div class="progress-track"><span style:width="{budget > 0 ? Math.min(100, expenseTotal / budget * 100) : 0}%"></span></div>
-        <div class="budget-foot"><span>{budget > 0 ? (expenseTotal / budget * 100).toFixed(1) : '0.0'}% used</span><span>{money(budget-expenseTotal)} remaining</span></div>
+        <div class="progress-track"><span style:width="{utilization}%"></span></div>
+        <div class="budget-foot"><span>{utilization.toFixed(1)}% utilized</span><span>{money(budget-expenseTotal)} still available</span></div>
       </article>
       <article class="metric"><span class="metric-label">Collected</span><strong>{money(collectionTotal)}</strong><span class="metric-note">Public contributions</span></article>
       <article class="metric"><span class="metric-label">Expenses</span><strong>{money(expenseTotal)}</strong><span class="metric-note">Recorded spending</span></article>
-      <article class="metric"><span class="metric-label">Past loan return*</span><strong>{money(returnedLoans)}</strong><span class="metric-note">Estimated principal + interest</span></article>
+      <article class="metric"><span class="metric-label">Loan Returned (with Int.)</span><strong>{money(returnedLoans)}</strong><span class="metric-note">Estimated principal + interest</span></article>
     </section>
+    <div class="stat-row">
+      <div class="stat-tile"><small>Contributors</small><strong>{filteredContributors.length}</strong></div>
+      <div class="stat-tile"><small>Expense records</small><strong>{expenses.length}</strong></div>
+      <div class="stat-tile"><small>Years</small><strong>{availableYears.length || 10}</strong></div>
+    </div>
 
     <section class="section-head" id="contributors">
-      <div><p class="eyebrow">COMMUNITY · {filteredContributors.length} NAMES</p><h2>Contributors</h2></div>
+      <div><p class="eyebrow">COMMUNITY · {filteredContributors.length} NAMES</p><h2>Recent Contributors</h2></div>
       <label class="search"><span aria-hidden="true">⌕</span><input bind:value={query} placeholder="Search name…" aria-label="Search contributors" /></label>
     </section>
     <section class="records" aria-label="Contributor list">
-      {#each filteredContributors as contributor, i}
+      {#each filteredContributors.slice(0, 8) as contributor, i}
         <article class="record">
           <span class="rank">{String(i+1).padStart(2,'0')}</span>
           <div class="record-main"><strong>{contributor.name}</strong><small>{contributor.type || 'Community contribution'}</small></div>
@@ -130,7 +139,7 @@
     </section>
 
     <section class="section-head" id="expenses">
-      <div><p class="eyebrow">OUTGOING · {expenses.length} RECORDS</p><h2>Recent expenses</h2></div>
+      <div><p class="eyebrow">OUTGOING · {expenses.length} RECORDS</p><h2>Expenses</h2></div>
       <span class="section-total">{money(expenseTotal)}</span>
     </section>
     <section class="records" aria-label="Expense records">
@@ -158,3 +167,10 @@
   </nav>
   <footer><span>CHHATH PUJA / TRANSPARENCY</span><span>Faith · Unity · Accountability</span></footer>
 </main>
+<nav class="bottom-nav" aria-label="Main navigation">
+  <a class="active" href="/" aria-current="page"><span class="nav-icon">⌂</span><span>Home</span></a>
+  <a href="/#contributors"><span class="nav-icon">♙</span><span>Contributors</span></a>
+  <a href="/#expenses"><span class="nav-icon">▤</span><span>Expenses</span></a>
+  <a href="/decade/"><span class="nav-icon">◷</span><span>Journey</span></a>
+  <a href="/downloads/"><span class="nav-icon">☰</span><span>Menu</span></a>
+</nav>
