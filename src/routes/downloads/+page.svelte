@@ -57,11 +57,19 @@
       <select id="village-select" class="full-select" bind:value={selectedVillage} onchange={resetSelection}><option value="">{text('-- Select village --','-- गाँव चुनें --')}</option>{#each villageOptions as village}<option value={village.value}>{$lang === 'hi' ? village.hi : village.en}</option>{/each}</select>
       <label class="field-label" for="person-search">{text('2. Search name','2. नाम खोजें')}</label>
       <input id="person-search" class="full-select" type="search" placeholder={text('Type a name to search…','नाम खोजने के लिए लिखें…')} bind:value={nameQuery} disabled={!selectedVillage} oninput={() => selectedPerson=''} autocomplete="off"/>
-      {#if !selectedVillage}<p class="hint">{text('Please select a village first.','कृपया पहले गाँव चुनें।')}
-      {:else if nameQuery.trim()}<div class="search-results" aria-label={text('Matching people','मिलते-जुलते नाम')}>
-        {#each people as p}<button type="button" class="person-option" onclick={() => choosePerson(p)}><span><strong>{displayName(p)}</strong><small>{displayVillage(p)}</small></span><span aria-hidden="true">›</span></button>
-        {:else}<p class="empty">{text('No matching names found.','कोई मिलता-जुलता नाम नहीं मिला।')}</p>{/each}
-      </div>{/if}
+      {#if !selectedVillage}
+        <p class="hint">{text('Please select a village first.','कृपया पहले गाँव चुनें।')}</p>
+      {:else if nameQuery.trim()}
+        <div class="search-results" aria-label={text('Matching people','मिलते-जुलते नाम')}>
+          {#each people as p}
+            <button type="button" class="person-option" onclick={() => choosePerson(p)}>
+              <span><strong>{displayName(p)}</strong><small>{displayVillage(p)}</small></span><span aria-hidden="true">›</span>
+            </button>
+          {:else}
+            <p class="empty">{text('No matching names found.','कोई मिलता-जुलता नाम नहीं मिला।')}</p>
+          {/each}
+        </div>
+      {/if}
       {#if selectedPerson && person}<div class="selected-person"><span>{text('Selected person','चयनित व्यक्ति')}</span><strong>{displayName(person)}</strong><button type="button" class="text-button" onclick={resetSelection}>{text('Change','बदलें')}</button></div>{/if}
     </section>
     {#if selectedPerson}
