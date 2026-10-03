@@ -1,73 +1,90 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
+  import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
+  import { lang, tr } from '$lib/stores/lang';
+  import { villages, peopleInVillage, downloadsForPerson, type DownloadGroup } from '$lib/api/derive';
+  import type { PortalData } from '$lib/api/schema';
   import BottomNav from '$lib/components/BottomNav.svelte';
-  type Row = Record<string, unknown>;
-  type PortalData = { collections?: Row[]; users?: Row[]; generatedFiles?: Row[]; generated_files?: Row[]; loanConsents?: Row[]; loan_consents?: Row[] };
-  const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
-  let data: PortalData = {}, loading = true, error = '', query = '', selectedYear = '', selectedPortalYearValue = '';
-  const value = (r: Row | undefined, ...keys: string[]) => {
-    if (!r) return '';
-    for (const key of keys) {
-      if (r[key] !== undefined && r[key] !== null && String(r[key]).trim()) return String(r[key]).trim();
-      const norm = key.trim().toLowerCase().replace(/\s+/g,' ');
-      const actual = Object.keys(r).find(k => k.trim().toLowerCase().replace(/\s+/g,' ') === norm);
-      if (actual && r[actual] !== undefined && r[actual] !== null && String(r[actual]).trim()) return String(r[actual]).trim();
-    }
-    return '';
+  let data: PortalData;
+  let loading = true, error = '', selectedVillage = '', selectedPerson = '';
+  const text = (en: string, hi: string) => $lang === 'hi' ? hi : en;
+  const value = (r: Record<string, unknown> | undefined, key: string, fallback = '') => {
+    if (!r) return fallback;
+    const v = r[key];
+    return v === undefined || v === null || !String(v).trim() ? fallback : String(v).trim();
   };
-  const resell = (r: Row) => ['true','1','yes'].includes(value(r,'Is Resell').toLowerCase());
-  $: users = data.users || [];
-  $: userMap = new Map(users.map(u => [value(u,'ID'),u]).filter(([id]) => !!id) as [string,Row][]);
-  $: generated = data.generatedFiles || data.generated_files || [];
-  $: consents = data.loanConsents || data.loan_consents || [];
-  $: years = [...new Set([...(data.collections || []).map(r=>value(r,'Year')),...generated.map(r=>value(r,'year','Year')),...consents.map(r=>value(r,'year','Year'))].filter(y=>/^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
-  $: if (years.length && selectedPortalYearValue && years.includes(selectedPortalYearValue)) selectedYear = selectedPortalYearValue;
-  $: if (years.length && !years.includes(selectedYear)) selectedYear = years[0];
-  $: if (years.length && selectedYear) selectedPortalYear.set(selectedYear);
-  $: documents = [
-    ...(data.collections || []).flatMap((r,i) => {
-      if (resell(r)) return [];
-      const year = value(r,'Year'), id = value(r,'ID','Name'), user = userMap.get(id);
-      const name = value(user,'Name (Hindi)','Name') || value(r,'Name (Hindi)','Name') || id || 'Contribution';
-      const type = value(r,'Contribution Type');
-      const docType = type === '2' ? 'samaan' : type === '3' ? 'receipt_work' : value(r,'Certificate','Is Certificate').toLowerCase() === 'true' ? 'certificate' : 'receipt';
-      const rowIndex = value(r,'__rowIndex') || String(i);
-      const recordId = docType+'-'+year+'-'+rowIndex;
-      const file = generated.find(g=>value(g,'doc_type')===docType && value(g,'year')===year && value(g,'record_id')===recordId);
-      const link = value(file,'public_link');
-      return link ? [{name,year,type:docType,recordId,link,kind:'Receipt / contribution'}] : [];
-    }),
-    ...consents.flatMap(r => {
-      if (value(r,'status').toLowerCase() !== 'accepted') return [];
-      const year = value(r,'year','Year'), cid = value(r,'consent_id'), role = value(r,'role').toLowerCase();
-      if (!['loaner','guarantor'].includes(role) || !cid) return [];
-      const type = role === 'loaner' ? 'consent_loaner' : 'consent_guarantor';
-      const recordId = type+'-'+year+'-'+cid;
-      const file = generated.find(g=>value(g,'doc_type')===type && value(g,'year')===year && value(g,'record_id')===recordId);
-      const personId = value(r,'person_id'), user = userMap.get(personId);
-      const link = value(file,'public_link');
-      return link ? [{name:value(user,'Name') || personId || 'Consent document',year,type,recordId,link,kind:role === 'loaner' ? 'Loaner consent' : 'Guarantor consent'}] : [];
-    })
-  ];
-  $: visible = documents.filter(d=>d.year===selectedYear && [d.name,d.year,d.kind,d.recordId].join(' ').toLowerCase().includes(query.toLowerCase()));
-  const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });
-  const unsubscribeLoading = portalLoading.subscribe((value) => { loading = value; });
-  const unsubscribeError = portalError.subscribe((value) => { error = value; });
-  const unsubscribeYear = selectedPortalYear.subscribe(value => { selectedPortalYearValue = value; });
-  onMount(() => {
-    void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
-  });</script>
-<svelte:head><title>Downloads — Chhath Puja</title><meta name="description" content="Public receipts, certificates and consent documents." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
+  $: source = data || { users: [], collections: [], loans: [], loanConsents: [], generatedFiles: [] };
+  $: villageOptions = [...new Set((source.users || []).map(u => value(u as Record<string,unknown>, $lang === 'hi' ? 'Village (Hindi)' : 'Village', value(u as Record<string,unknown>, 'Village'))).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  $: villageRecord = (source.users || []).find(u => value(u as Record<string,unknown>, 'Village') === selectedVillage || value(u as Record<string,unknown>, 'Village (Hindi)') === selectedVillage);
+  $: canonicalVillage = villageRecord ? value(villageRecord as Record<string,unknown>, 'Village', selectedVillage) : selectedVillage;
+  $: people = selectedVillage ? peopleInVillage(source, canonicalVillage, '', 1000).sort((a,b) => {
+    const an = $lang === 'hi' ? value(a as Record<string,unknown>, 'Name (Hindi)', value(a as Record<string,unknown>, 'Name')) : value(a as Record<string,unknown>, 'Name', value(a as Record<string,unknown>, 'Name (Hindi)'));
+    const bn = $lang === 'hi' ? value(b as Record<string,unknown>, 'Name (Hindi)', value(b as Record<string,unknown>, 'Name')) : value(b as Record<string,unknown>, 'Name', value(b as Record<string,unknown>, 'Name (Hindi)'));
+    return an.localeCompare(bn);
+  }) : [];
+  $: person = (source.users || []).find(u => value(u as Record<string,unknown>, 'ID') === selectedPerson);
+  $: groups: DownloadGroup[] = selectedPerson ? downloadsForPerson(source, selectedPerson) : [];
+  $: allDocs = groups.flatMap(g => g.docs.map(d => ({...d, titleKey:g.titleKey})));
+  $: availableDocs = allDocs.filter(d => !!d.publicLink);
+  $: unavailableDocs = allDocs.filter(d => !d.publicLink);
+  $: if (selectedVillage && !villageOptions.includes(selectedVillage)) { selectedVillage = ''; selectedPerson = ''; }
+  $: if (selectedPerson && !people.some(p => value(p as Record<string,unknown>, 'ID') === selectedPerson)) selectedPerson = '';
+  const unsubscribeData = portalData.subscribe(v => { data = v as PortalData; });
+  const unsubscribeLoading = portalLoading.subscribe(v => { loading = v; });
+  const unsubscribeError = portalError.subscribe(v => { error = v; });
+  onMount(() => { void loadPortalData().catch(() => {}); return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); }; });
+</script>
+<svelte:head><title>{$lang === 'hi' ? 'डाउनलोड केंद्र — छठ पूजा' : 'Download Center — Chhath Puja'}</title><meta name="description" content="Find public receipts, certificates and consent documents by village and person." /></svelte:head>
+<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>{$lang === 'hi' ? 'पारदर्शिता पोर्टल' : 'Transparency Portal'}</small></span></a><button class="language" type="button" onclick={() => lang.toggle()}>{$lang === 'hi' ? 'English' : 'हिंदी'}</button></header>
 <main class="page">
-  <p class="eyebrow">PUBLIC DOCUMENTS / GENERATED FILES</p><h1>Downloads<span>.</span></h1><p class="lede">Published receipts, material records, certificates and accepted loan consent documents.</p>
-  <div class="header-actions"><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Filter downloads by year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div>
-  <label class="search full-search"><span aria-hidden="true">⌕</span><input bind:value={query} placeholder="Search name, year or document…" aria-label="Search documents" /></label>
-  {#if loading}<p class="notice">Loading published documents…</p>{:else if error}<p class="notice" role="status">{error}</p>{:else}
-    <section class="section-head"><div><p class="eyebrow">AVAILABLE FILES · {visible.length}</p><h2>Published downloads</h2></div></section>
-    <section class="records" aria-label="Published downloads">{#each visible as doc,i}<article class="record"><span class="rank">{String(i+1).padStart(2,'0')}</span><div class="record-main"><strong>{doc.name}</strong><small>{doc.kind} · {doc.year} · {doc.recordId}</small></div><a class="text-link" href={doc.link} target="_blank" rel="noopener noreferrer">Open ↗</a></article>{:else}<p class="empty">No generated files match this search. Only published links with a matching record ID are shown.</p>{/each}</section>
+  <p class="eyebrow">{text('PUBLIC DOCUMENTS / GENERATED FILES','सार्वजनिक दस्तावेज़ / उपलब्ध फ़ाइलें')}</p>
+  <h1>{text('Download Center','डाउनलोड केंद्र')}<span>.</span></h1>
+  <p class="lede">{text('Choose a village, then a person, to see their available and unavailable documents.','पहले गाँव चुनें, फिर व्यक्ति का नाम चुनें। उसके उपलब्ध और अनुपलब्ध दस्तावेज़ यहाँ दिखेंगे।')}</p>
+  {#if loading}<p class="notice">{text('Loading public records…','सार्वजनिक रिकॉर्ड लोड हो रहे हैं…')}</p>
+  {:else if error}<p class="notice" role="status">{error}</p>
+  {:else}
+    <section class="picker-card">
+      <label class="field-label" for="village-select">{text('1. Select village','1. गाँव चुनें')}</label>
+      <select id="village-select" class="full-select" bind:value={selectedVillage} onchange={() => selectedPerson = ''}>
+        <option value="">{text('-- Select village --','-- गाँव चुनें --')}</option>
+        {#each villageOptions as village}<option value={village}>{village}</option>{/each}
+      </select>
+      <label class="field-label" for="person-select">{text('2. Select name','2. नाम चुनें')}</label>
+      <select id="person-select" class="full-select" bind:value={selectedPerson} disabled={!selectedVillage}>
+        <option value="">{selectedVillage ? text('-- Select name --','-- नाम चुनें --') : text('Select a village first','पहले गाँव चुनें')}</option>
+        {#each people as p}
+          <option value={value(p as Record<string,unknown>, 'ID')}>{$lang === 'hi' ? value(p as Record<string,unknown>, 'Name (Hindi)', value(p as Record<string,unknown>, 'Name')) : value(p as Record<string,unknown>, 'Name', value(p as Record<string,unknown>, 'Name (Hindi)'))}</option>
+        {/each}
+      </select>
+      {#if selectedPerson && person}<p class="selected-person">{text('Selected person:','चयनित व्यक्ति:')} <strong>{$lang === 'hi' ? value(person as Record<string,unknown>, 'Name (Hindi)', value(person as Record<string,unknown>, 'Name')) : value(person as Record<string,unknown>, 'Name', value(person as Record<string,unknown>, 'Name (Hindi)'))}</strong></p>{/if}
+    </section>
+    {#if selectedPerson}
+      <section class="section-head"><div><p class="eyebrow">{text('DOCUMENT STATUS','दस्तावेज़ की स्थिति')}</p><h2>{text('Available files','उपलब्ध फ़ाइलें')} · {availableDocs.length}</h2></div></section>
+      <section class="records" aria-label="Available files">
+        {#each availableDocs as doc,i}
+          <article class="record"><span class="rank">{String(i+1).padStart(2,'0')}</span><div class="record-main"><strong>{text(doc.labelKey === 'doc_receipt' ? 'Receipt' : doc.labelKey === 'doc_receipt_work' ? 'Work receipt' : doc.labelKey === 'doc_certificate' ? 'Certificate' : doc.labelKey === 'doc_samaan' ? 'Material receipt' : doc.labelKey === 'doc_consent_loaner' ? 'Loan consent (loaner)' : 'Loan consent (guarantor)', doc.labelKey === 'doc_receipt' ? 'रसीद' : doc.labelKey === 'doc_receipt_work' ? 'कार्य रसीद' : doc.labelKey === 'doc_certificate' ? 'प्रमाण-पत्र' : doc.labelKey === 'doc_samaan' ? 'सामग्री रसीद' : doc.labelKey === 'doc_consent_loaner' ? 'ऋण सहमति (ऋणी)' : 'ऋण सहमति (गारंटर)')}</strong><small>{doc.year} · {doc.recordId}</small></div><a class="text-link" href={doc.publicLink} target="_blank" rel="noopener noreferrer">{text('Download ↗','डाउनलोड ↗')}</a></article>
+        {:else}<p class="empty">{text('No available files for this person.','इस व्यक्ति के लिए कोई उपलब्ध फ़ाइल नहीं है।')}</p>{/each}
+      </section>
+      <section class="section-head unavailable-head"><div><p class="eyebrow">{text('NOT PUBLISHED / MISSING FILES','प्रकाशित नहीं / अनुपलब्ध फ़ाइलें')}</p><h2>{text('Unavailable files','अनुपलब्ध फ़ाइलें')} · {unavailableDocs.length}</h2></div></section>
+      <section class="records" aria-label="Unavailable files">
+        {#each unavailableDocs as doc,i}
+          <article class="record unavailable-record"><span class="rank">{String(i+1).padStart(2,'0')}</span><div class="record-main"><strong>{doc.labelKey === 'doc_receipt' ? text('Receipt','रसीद') : doc.labelKey === 'doc_receipt_work' ? text('Work receipt','कार्य रसीद') : doc.labelKey === 'doc_certificate' ? text('Certificate','प्रमाण-पत्र') : doc.labelKey === 'doc_samaan' ? text('Material receipt','सामग्री रसीद') : doc.labelKey === 'doc_consent_loaner' ? text('Loan consent (loaner)','ऋण सहमति (ऋणी)') : text('Loan consent (guarantor)','ऋण सहमति (गारंटर)')}</strong><small>{doc.year} · {doc.recordId}</small></div><span class="status-muted">{text('Not available','उपलब्ध नहीं')}</span></article>
+        {:else}<p class="empty">{text('No missing files found for this person.','इस व्यक्ति के लिए कोई अनुपलब्ध फ़ाइल नहीं मिली।')}</p>{/each}
+      </section>
+    {:else}
+      <p class="empty prompt-empty">{text('Select a village and name to view that person’s documents.','व्यक्ति के दस्तावेज़ देखने के लिए गाँव और नाम चुनें।')}</p>
+    {/if}
   {/if}
-  <a class="back-link" href="/">← Back to public ledger</a>
+  <a class="back-link" href="/">{text('← Back to home','← होम पर वापस')}</a>
 </main><BottomNav />
+<style>
+  .picker-card{display:grid;gap:.55rem;padding:1rem;margin:1.2rem 0;border:1px solid var(--border,#e5e7eb);border-radius:1rem;background:var(--card,#fff);color:var(--text,#1f2937)}
+  .field-label{font-size:.85rem;font-weight:700;margin-top:.25rem}
+  .full-select{width:100%;min-height:46px;padding:.7rem .8rem;border:1px solid var(--border,#d1d5db);border-radius:.7rem;background:var(--card,#fff);color:var(--text,#1f2937);font:inherit}
+  .full-select:disabled{opacity:.65}
+  .selected-person{margin:.4rem 0 0;font-size:.9rem;color:var(--muted,#68736e)}
+  .unavailable-head{margin-top:1.5rem}
+  .unavailable-record{opacity:.82}
+  .status-muted{font-size:.8rem;font-weight:700;color:var(--muted,#68736e);white-space:nowrap}
+  .prompt-empty{margin-top:1rem}
+</style>
