@@ -51,7 +51,7 @@
 <button class="menu-trigger" type="button" aria-expanded={open} aria-haspopup="dialog" onclick={() => {open = true; showNotifications = false;}}><span class="nav-icon">☰</span><span>Menu</span></button>
 {#if open}
   <div class="menu-overlay" role="presentation" onclick={(e) => { if (e.target === e.currentTarget) open = false; }}>
-    <section class="menu-sheet" role="dialog" aria-modal="true" aria-label="Menu">
+    <dialog open class="menu-sheet" aria-label="Menu">
       <div class="menu-grabber"></div>
       <header class="menu-sheet-head"><div><p class="eyebrow">CHHATH PUJA PORTAL</p><h2>{showNotifications ? 'Notifications' : 'Menu'}</h2></div><button class="menu-close" type="button" aria-label="Close menu" onclick={() => {open = false; showNotifications = false;}}>×</button></header>
       {#if showNotifications}
@@ -65,7 +65,7 @@
         <nav class="menu-items" aria-label="More pages">{#each items as item}<a class:menu-item-active={activePath.startsWith(item.href)} href={item.href} onclick={() => open = false}><span class="menu-item-icon">{item.icon}</span><span class="menu-item-copy"><strong>{item.label}</strong><small>{item.detail}</small></span><span class="menu-chevron">›</span></a>{/each}</nav>
       {/if}
       <nav class="menu-legal" aria-label="Legal pages"><a href="/terms/" onclick={() => open = false}>Terms of use</a><a href="/privacy/" onclick={() => open = false}>Privacy</a><a href="/verify/" onclick={() => open = false}>Verify a document</a></nav><p class="menu-foot">Faith · Unity · Transparency</p>
-    </section>
+    </dialog>
   </div>
 {/if}
 

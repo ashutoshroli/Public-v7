@@ -12,8 +12,8 @@
   function onKey(e:KeyboardEvent){if(e.key==='Escape')open=false;}
 </script>
 <button class="donate-quick" type="button" onclick={()=>{open=true;}} aria-haspopup="dialog">♡ Donate Now</button>
-{#if open}
 <svelte:window onkeydown={onKey}/>
+{#if open}
 <div class="donate-backdrop" role="presentation" onclick={e=>{if(e.target===e.currentTarget)open=false;}}>
 <section class="donate-modal" role="dialog" aria-modal="true" aria-labelledby="donate-popup-title">
 <header><div><p>COMMUNITY SUPPORT</p><h2 id="donate-popup-title">Donate Now</h2></div><button aria-label="Close donation popup" onclick={()=>open=false}>×</button></header>
