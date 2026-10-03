@@ -7,5 +7,9 @@ export const navItems: NavItem[] = [
   { href: '/committee/', key: 'nav_committee' },
   { href: '/decade/', key: 'decade_title' },
   { href: '/downloads/', key: 'download_center' },
-  { href: '/donate/', key: 'donate_title' }
+  { href: '/donate/', key: 'donate_title' },
+  { href: '/verify/', key: 'verify_title' },
+  { href: '/guide/', key: 'guide_title' },
+  { href: '/privacy/', key: 'footer_privacy' },
+  { href: '/terms/', key: 'footer_terms' }
 ];

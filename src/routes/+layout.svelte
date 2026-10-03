@@ -38,6 +38,6 @@
 </script>
 
 <Seo />
-<SiteHeader />
+<SiteHeader showYear={$page.url.pathname === '/'} />
 <StatusBanner />
 {@render children()}

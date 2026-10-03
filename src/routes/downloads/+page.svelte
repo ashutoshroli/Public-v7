@@ -54,7 +54,7 @@
       const recordId = type+'-'+year+'-'+cid;
       const file = generated.find(g=>value(g,'doc_type')===type && value(g,'year')===year && value(g,'record_id')===recordId);
       const personId = value(r,'person_id'), user = userMap.get(personId);
-      const link = value(file,'public_link');
+      const link = safePublicUrl(value(file,'public_link'));
       return link ? [{name:value(user,'Name') || personId || 'Consent document',year,type,recordId,link,kind:role === 'loaner' ? 'Loaner consent' : 'Guarantor consent'}] : [];
     })
   ];
