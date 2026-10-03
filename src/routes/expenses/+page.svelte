@@ -31,13 +31,18 @@
   const money = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
   const yearOf = (r: Row) => value(r, 'Year', 'year');
   const categoryOf = (r: Row) => value(r, 'Category', 'category') || 'Other';
-  const descriptionOf = (r: Row) => value(r,'Discription (Hindi)','Discription','Description (Hindi)','Description','description','Name') || 'Expense record';
+  const descriptionEnglish = (r: Row) => value(r, 'Discription', 'Description', 'description', 'Name');
+  const descriptionHindi = (r: Row) => value(r, 'Discription (Hindi)', 'Description (Hindi)');
+  const descriptionOf = (r: Row) => (language === 'hi'
+    ? descriptionHindi(r) || descriptionEnglish(r)
+    : descriptionEnglish(r) || descriptionHindi(r)) || (language === 'hi' ? 'खर्च का विवरण' : 'Expense record');
+  const searchableDescription = (r: Row) => [descriptionEnglish(r), descriptionHindi(r)].filter(Boolean).join(' ').toLowerCase();
   $: yearsAvailable = [...new Set((data.expenses || []).map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
   $: if (yearsAvailable.length && !yearsAvailable.includes(selectedYear)) selectedYear = yearsAvailable[0];
   $: if (yearsAvailable.length && selectedPortalYearValue && yearsAvailable.includes(selectedPortalYearValue)) selectedYear = selectedPortalYearValue;
   $: if (yearsAvailable.length && selectedYear) selectedPortalYear.set(selectedYear);
   $: years = yearsAvailable.length ? yearsAvailable : [selectedYear];
-  $: records = (data.expenses || []).filter(row => yearOf(row) === selectedYear && (filter === 'All' || categoryOf(row).toLowerCase() === filter.toLowerCase()) && (descriptionOf(row).toLowerCase().includes(query.toLowerCase()) || categoryOf(row).toLowerCase().includes(query.toLowerCase())));
+  $: records = (data.expenses || []).filter(row => yearOf(row) === selectedYear && (filter === 'All' || categoryOf(row).toLowerCase() === filter.toLowerCase()) && (searchableDescription(row).includes(query.toLowerCase()) || categoryOf(row).toLowerCase().includes(query.toLowerCase())));
   $: total = records.reduce((sum,row)=>sum+amount(value(row,'Amount','amount')),0);
   const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });
   const unsubscribeLoading = portalLoading.subscribe((value) => { loading = value; });
