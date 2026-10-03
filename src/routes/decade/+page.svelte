@@ -3,12 +3,12 @@
   import { onMount } from 'svelte';
 
   type Row = Record<string, unknown>;
-  type PortalData = { collections?: Row[]; expenses?: Row[]; loans?: Row[]; committee?: Row[] };
+  type PortalData = { collections?: Row[]; expenses?: Row[]; loans?: Row[]; committee?: Row[]; users?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
   let data: PortalData = {};
   let years = Array.from({ length: 10 }, (_, i) => 2017 + i);
   let active = 2017;
-  let counts = 0;
+  let counts = 0;\n  let cashTotal = 0;\n  let peopleCount = 0;
   let loading = true;
   let error = '';
 
@@ -56,7 +56,7 @@
   <div class="year-strip" aria-label="Choose a year">
     {#each years as y}<button class:active={active===y} aria-pressed={active===y} onclick={() => selectYear(y)}>{y}</button>{/each}
   </div>
-  <section class="journey-feature" aria-live="polite"><p class="eyebrow">YEAR IN FOCUS</p><strong class="journey-year">{active}</strong><h2>One community. A shared commitment.</h2><p>Every contribution and every recorded expense is part of our shared story.</p><div class="journey-stat"><span>Contribution records{loading ? ' · Loading' : ''}</span><strong>{counts}</strong></div></section>
+  <section class="journey-feature" aria-live="polite"><p class="eyebrow">YEAR IN FOCUS</p><strong class="journey-year">{active}</strong><h2>One community. A shared commitment.</h2><p>Every contribution and every recorded expense is part of our shared story.</p><div class="journey-stat"><span>Contribution records{loading ? ' · Loading' : ''}</span><strong>{counts}</strong></div><div class="journey-stat"><span>Unique contributor IDs</span><strong>{peopleCount}</strong></div><div class="journey-stat"><span>Cash contributions</span><strong>{new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(cashTotal)}</strong></div></section>
   <a class="back-link" href="/">← Back to public ledger</a>
 </main>
 <BottomNav />
