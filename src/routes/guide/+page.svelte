@@ -1,6 +1,10 @@
-<script lang="ts">import BottomNav from "$lib/components/BottomNav.svelte"; import NotifyButton from "$lib/components/NotifyButton.svelte";</script>
+<script lang="ts">import BottomNav from "$lib/components/BottomNav.svelte";
+  import { portalLanguage, togglePortalLanguage, initPortalLanguage } from "$lib/stores/language";
+  let language: "en" | "hi" = "en";
+  const unsubLang = portalLanguage.subscribe(v => language = v); import NotifyButton from "$lib/components/NotifyButton.svelte";initPortalLanguage();
+</script>
 <svelte:head><title>User Guide — Chhath Puja</title><meta name="description" content="How to use the Chhath Puja public transparency portal." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
+<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === "hi" ? "English" : "हिंदी"}</button><a class="language" href="/">{language === "hi" ? "← होम" : "← Home"}</a></div></header>
 <main class="page">
   <p class="eyebrow">HELP CENTRE</p><h1>User Guide<span>.</span></h1><p class="lede">How to browse community records and use this portal on your phone.</p>
   <section class="records guide-records">
