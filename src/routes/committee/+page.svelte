@@ -1,3 +1,4 @@
+<script lang="ts">import BottomNav from "$lib/components/BottomNav.svelte";</script>
 <svelte:head><title>Committee — Chhath Puja</title><meta name="description" content="Committee information for Shaharpura Chhath Puja." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
 <main class="page">
