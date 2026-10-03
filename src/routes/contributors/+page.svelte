@@ -10,6 +10,7 @@
   let error = '';
   let selectedYear = String(new Date().getFullYear());
   let yearInitialized = false;
+  let selectedPortalYearValue = '';
   let query = '';
   let filter = 'All';
   const value = (row: Row | undefined, ...keys: string[]) => {
@@ -34,6 +35,7 @@
   };
   const isResell = (r: Row) => ['true','1','yes'].includes(value(r,'Is Resell','Is Resell ').toLowerCase());
   $: yearsAvailable = [...new Set((data.collections || []).map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
+  $: if (yearsAvailable.length && selectedPortalYearValue && yearsAvailable.includes(selectedPortalYearValue)) selectedYear = selectedPortalYearValue;
   $: if (yearsAvailable.length && !yearsAvailable.includes(selectedYear)) selectedYear = yearsAvailable[0];
   $: if (yearsAvailable.length && !yearInitialized) { selectedYear = yearsAvailable[0]; yearInitialized = true; }
   $: if (yearInitialized && selectedYear) selectedPortalYear.set(selectedYear);
@@ -60,9 +62,10 @@
   const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });
   const unsubscribeLoading = portalLoading.subscribe((value) => { loading = value; });
   const unsubscribeError = portalError.subscribe((value) => { error = value; });
+  const unsubscribeYear = selectedPortalYear.subscribe(value => { selectedPortalYearValue = value; });
   onMount(() => {
     void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
 <svelte:head><title>Contributors — Chhath Puja</title><meta name="description" content="Browse public contribution records for Shaharpura Chhath Puja." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
