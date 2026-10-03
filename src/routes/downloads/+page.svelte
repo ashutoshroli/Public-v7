@@ -20,6 +20,12 @@
       ? value(record, 'Name (Hindi)', value(record, 'Name'))
       : value(record, 'Name', value(record, 'Name (Hindi)'));
   }
+  function personName(p: unknown) {
+    const record = p as Record<string, unknown>;
+    return $lang === 'hi'
+      ? value(record, 'Name (Hindi)', value(record, 'Name'))
+      : value(record, 'Name', value(record, 'Name (Hindi)'));
+  }
   $: source = data || { users: [], collections: [], loans: [], loanConsents: [], generatedFiles: [] };
   $: villageOptions = [...new Set((source.users || []).map(u => value(u as Record<string,unknown>, $lang === 'hi' ? 'Village (Hindi)' : 'Village', value(u as Record<string,unknown>, 'Village'))).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   $: villageRecord = (source.users || []).find(u => value(u as Record<string,unknown>, 'Village') === selectedVillage || value(u as Record<string,unknown>, 'Village (Hindi)') === selectedVillage);
@@ -62,7 +68,7 @@
         <div class="search-results" role="listbox" aria-label={text('Matching people','मिलते-जुलते नाम')}>
           {#each people as p}
             <button type="button" class="person-option" onclick={() => choosePerson(p)}>
-              <span>{ $lang === 'hi' ? value(p as Record<string,unknown>, 'Name (Hindi)', value(p as Record<string,unknown>, 'Name')) : value(p as Record<string,unknown>, 'Name', value(p as Record<string,unknown>, 'Name (Hindi'))) }</span><span aria-hidden="true">›</span>
+              <span>{personName(p)}</span><span aria-hidden="true">›</span>
             </button>
           {:else}
             <p class="empty">{text('No matching names found.','कोई मिलता-जुलता नाम नहीं मिला।')}</p>
