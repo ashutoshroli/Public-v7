@@ -2,6 +2,9 @@
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
   import BottomNav from '$lib/components/BottomNav.svelte';
+  import { portalLanguage, togglePortalLanguage, initPortalLanguage } from '$lib/stores/language';
+  let language: 'en' | 'hi' = 'en';
+  const unsubLang = portalLanguage.subscribe(v => language = v);
   type Row = Record<string, unknown>;
   type PortalData = { loans?: Row[]; users?: Row[]; guarantors?: Row[]; collections?: Row[]; committee?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -47,12 +50,12 @@
       const gu = userMap.get(gid);
       const isContributor = (data.collections || []).some(x => yearOf(x) === loanYear && [value(x,'ID'),value(x,'Name')].includes(gid));
       const isCommittee = (data.committee || []).some(x => yearOf(x) === loanYear && [value(x,'ID'),value(x,'Name')].includes(gid));
-      return {id:gid,name:value(gu,'Name (Hindi)','Name') || gid,village:value(gu,'Village'),isContributor,isCommittee};
+      return {id:gid,name: language === 'hi' ? (value(gu,'Name (Hindi)','Name') || gid) : (value(gu,'Name') || gid),village: language === 'hi' ? (value(gu,'Village (Hindi)','Village') || '') : (value(gu,'Village','Village (Hindi)') || ''),isContributor,isCommittee};
       });
     });
     const repaid = amount(value(row,'Amount Returned','Returned Amount','Repaid Amount','Total Repaid','Paid Amount'));
     const outstanding = Math.max(0, principal + interest - repaid);
-    return {id,name:value(user,'Name (Hindi)','Name') || value(row,'Name (Hindi)','Name') || id || 'Loan record',loanId,principal,rate,tenure,interest,total:principal+interest,repaid,outstanding,year:loanYear,guarantors};
+    return {id,name: language === 'hi' ? (value(user,'Name (Hindi)','Name') || value(row,'Name (Hindi)','Name') || id || 'ऋण रिकॉर्ड') : (value(user,'Name') || value(row,'Name') || id || 'Loan record'),loanId,principal,rate,tenure,interest,total:principal+interest,repaid,outstanding,year:loanYear,guarantors};
   });
   $: visible = records.filter(r => {
     const q = query.toLowerCase();
@@ -66,11 +69,12 @@
   const unsubscribeError = portalError.subscribe((value) => { error = value; });
   const unsubscribeYear = selectedPortalYear.subscribe(value => { selectedPortalYearValue = value; });
   onMount(() => {
+    initPortalLanguage();
     void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); unsubLang(); };
   });</script>
 <svelte:head><title>Loans — Chhath Puja</title><meta name="description" content="Browse public loan and repayment records for Shaharpura Chhath Puja." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
+<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === 'hi' ? 'English' : 'हिंदी'}</button><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
 <main class="page">
   <p class="eyebrow">PUBLIC LEDGER / LOANS</p><h1>Loans & Returns<span>.</span></h1><p class="lede">Browse recorded loans and repayment information.</p>
   <section class="summary expense-summary">
