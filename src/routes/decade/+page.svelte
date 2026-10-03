@@ -71,13 +71,13 @@ initPortalLanguage();
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === "hi" ? "English" : "हिंदी"}</button><a class="language" href="/">{language === "hi" ? "← होम" : "← Home"}</a></div></header>
 <main class="page journey-page">
   <p class="eyebrow">OUR JOURNEY / 2017—2026</p>
-  <h1>A decade of<br /><span>showing up.</span></h1>
+  <h1>{language === 'hi' ? 'एक दशक से<br /><span>साथ निभाते हुए।</span>' : 'A decade of<br /><span>showing up.</span>'}</h1>
   <p class="lede">छठी मैया के आशीर्वाद, समुदाय के सहयोग और पारदर्शिता की यात्रा।</p>
   {#if error}<p class="notice" role="status">{error} Showing the published year range.</p>{/if}
   <div class="year-strip" aria-label="Choose a year">
     {#each years as y}<button class:active={active===y} aria-pressed={active===y} onclick={() => selectYear(y)}>{y}</button>{/each}
   </div>
-  <section class="journey-feature" aria-live="polite"><p class="eyebrow">YEAR IN FOCUS</p><strong class="journey-year">{active}</strong><h2>One community. A shared commitment.</h2><p>Every contribution and every recorded expense is part of our shared story.</p><div class="journey-stat"><span>Contribution records{loading ? ' · Loading' : ''}</span><strong>{counts}</strong></div><div class="journey-stat"><span>Unique contributor IDs</span><strong>{peopleCount}</strong></div><div class="journey-stat"><span>Cash contributions</span><strong>{new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(cashTotal)}</strong></div></section>
-  <a class="back-link" href="/">← Back to public ledger</a>
+  <section class="journey-feature" aria-live="polite"><p class="eyebrow">YEAR IN FOCUS</p><strong class="journey-year">{active}</strong><h2>{language === 'hi' ? 'एक समुदाय, साझा संकल्प।' : 'One community. A shared commitment.'}</h2><p>{language === 'hi' ? 'हर योगदान और दर्ज खर्च हमारी साझा यात्रा का हिस्सा है।' : 'Every contribution and every recorded expense is part of our shared story.'}</p><div class="journey-stat"><span>{language === 'hi' ? 'योगदान रिकॉर्ड' : 'Contribution records'}{loading ? (language === 'hi' ? ' · लोड हो रहा है' : ' · Loading') : ''}</span><strong>{counts}</strong></div><div class="journey-stat"><span>{language === 'hi' ? 'अलग योगदानकर्ता ID' : 'Unique contributor IDs'}</span><strong>{peopleCount}</strong></div><div class="journey-stat"><span>{language === 'hi' ? 'नकद योगदान' : 'Cash contributions'}</span><strong>{new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(cashTotal)}</strong></div></section>
+  <a class="back-link" href="/">{language === 'hi' ? '← सार्वजनिक लेखा पर वापस' : '← Back to public ledger'}</a>
 </main>
 <BottomNav />
