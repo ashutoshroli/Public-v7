@@ -46,7 +46,7 @@
 <svelte:head><title>{text('Download Center — Chhath Puja','डाउनलोड केंद्र — छठ पूजा')}</title><meta name="description" content="Find public receipts, certificates and consent documents by village and person."/></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>{text('Transparency Portal','पारदर्शिता पोर्टल')}</small></span></a><button class="language" type="button" onclick={() => lang.toggle()}>{text('हिंदी','English')}</button></header>
 <main class="page">
-  <p class="eyebrow">{text('{text('PUBLIC DOCUMENTS / GENERATED FILES','सार्वजनिक दस्तावेज़ / उपलब्ध फ़ाइलें')}','सार्वजनिक दस्तावेज़ / उपलब्ध फ़ाइलें')}</p>
+  <p class="eyebrow">{text('PUBLIC DOCUMENTS / GENERATED FILES','सार्वजनिक दस्तावेज़ / उपलब्ध फ़ाइलें')}</p>
   <h1>{text('Download Center','डाउनलोड केंद्र')}<span>.</span></h1>
   <p class="lede">{text('Choose a village, then search for a person to see their documents.','पहले गाँव चुनें, फिर नाम खोजें और उस व्यक्ति के दस्तावेज़ देखें।')}</p>
   {#if loading}<p class="notice" role="status">{text('Loading public records…','सार्वजनिक रिकॉर्ड लोड हो रहे हैं…')}</p>
@@ -73,9 +73,9 @@
       {#if selectedPerson && person}<div class="selected-person"><span>{text('Selected person','चयनित व्यक्ति')}</span><strong>{displayName(person)}</strong><button type="button" class="text-button" onclick={resetSelection}>{text('Change','बदलें')}</button></div>{/if}
     </section>
     {#if selectedPerson}
-      <section class="section-head"><div><p class="eyebrow">{text('{text('DOCUMENT STATUS','दस्तावेज़ की स्थिति')}','दस्तावेज़ की स्थिति')}</p><h2>{text('Available files','उपलब्ध फ़ाइलें')} · {availableDocs.length}</h2></div></section>
+      <section class="section-head"><div><p class="eyebrow">{text('DOCUMENT STATUS','दस्तावेज़ की स्थिति')}</p><h2>{text('Available files','उपलब्ध फ़ाइलें')} · {availableDocs.length}</h2></div></section>
       <section class="records" aria-label={text('Available files','उपलब्ध फ़ाइलें')}>{#each availableDocs as doc,i}<article class="record"><span class="rank">{String(i+1).padStart(2,'0')}</span><div class="record-main"><strong>{docLabel(doc.labelKey)}</strong><small>{doc.year}</small></div><a class="text-link" href={doc.publicLink} target="_blank" rel="noopener noreferrer">{text('Download ↗','डाउनलोड ↗')}</a></article>{:else}<p class="empty">{text('No available files for this person.','इस व्यक्ति के लिए कोई उपलब्ध फ़ाइल नहीं है।')}</p>{/each}</section>
-      <section class="section-head unavailable-head"><div><p class="eyebrow">{text('{text('NOT PUBLISHED / MISSING FILES','प्रकाशित नहीं / अनुपलब्ध फ़ाइलें')}','प्रकाशित नहीं / अनुपलब्ध फ़ाइलें')}</p><h2>{text('Unavailable files','अनुपलब्ध फ़ाइलें')} · {unavailableDocs.length}</h2></div></section>
+      <section class="section-head unavailable-head"><div><p class="eyebrow">{text('NOT PUBLISHED / MISSING FILES','प्रकाशित नहीं / अनुपलब्ध फ़ाइलें')}</p><h2>{text('Unavailable files','अनुपलब्ध फ़ाइलें')} · {unavailableDocs.length}</h2></div></section>
       <section class="records" aria-label={text('Unavailable files','अनुपलब्ध फ़ाइलें')}>{#each unavailableDocs as doc,i}<article class="record unavailable-record"><span class="rank">{String(i+1).padStart(2,'0')}</span><div class="record-main"><strong>{docLabel(doc.labelKey)}</strong><small>{doc.year}</small></div><span class="status-muted">{text('Not available','उपलब्ध नहीं')}</span></article>{:else}<p class="empty">{text('No missing files found for this person.','इस व्यक्ति के लिए कोई अनुपलब्ध फ़ाइल नहीं मिली।')}</p>{/each}</section>
     {:else}<p class="empty prompt-empty">{text('Select a village and search for a name to view documents.','दस्तावेज़ देखने के लिए गाँव चुनें और नाम खोजें।')}</p>{/if}
   {/if}
