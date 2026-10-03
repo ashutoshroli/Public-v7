@@ -3,7 +3,7 @@
   import { portalState, year, selectedPortalYear } from '$lib/stores/portal';
   import { lang, tr } from '$lib/stores/lang';
   import { decadeStats, journeyEntries, journeyTagline, journeyText } from '$lib/api/derive';
-  import { formatMoney } from '$lib/utils/format';
+  import { fmt } from '$lib/utils/format';
   let active = $state(new Date().getFullYear());
   const stats = $derived(decadeStats($portalState.data));
   const entries = $derived(journeyEntries($portalState.data));
@@ -17,7 +17,6 @@
   const heading = $derived(pageText.title || $tr('decade_title'));
   const subtitle = $derived(pageText.subtitle || ($lang === 'hi' ? tagline.hi : tagline.en) || $tr('decade_sub'));
   const intro = $derived(pageText.intro || $tr('decade_intro'));
-  const fmt = (n: number) => formatMoney(n);
   function selectYear(y: number) { active = y; year.set(y); selectedPortalYear.set(String(y)); }
   $effect(() => { if (years.length && !years.some((item) => item.year === active)) active = years[years.length - 1].year; });
 </script>
