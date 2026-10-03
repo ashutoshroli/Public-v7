@@ -22,7 +22,7 @@
   const amount = (v: unknown) => { const n = Number(String(v ?? '').replace(/[^0-9.-]/g,'')); return Number.isFinite(n) ? n : 0; };
   const money = (n: number) => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n);
   const yearOf = (r: Row) => value(r,'Year');
-  const idOf = (r: Row) => value(r,'ID','Name','Receiver');
+  const idOf = (r: Row) => value(r,'Loaner','Loaner ID','Borrower ID','ID','Name','Receiver');
   const truthy = (v: string) => ['true','1','yes'].includes(v.toLowerCase());
   $: yearsAvailable = [...new Set((data.loans || []).map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
   $: if (yearsAvailable.length && !yearsAvailable.includes(selectedYear)) selectedYear = yearsAvailable[0];
@@ -32,21 +32,23 @@
   $: userMap = new Map((data.users || []).map(u => [value(u,'ID'),u]).filter(([id]) => !!id) as [string,Row][]);
   $: records = (data.loans || []).filter(row => yearOf(row) === selectedYear).map(row => {
     const id = idOf(row), user = userMap.get(id);
-    const principal = amount(value(row,'Amount'));
-    const rate = amount(value(row,'Intrest Rate','Interest Rate'));
-    const tenure = amount(value(row,'Tenure'));
+    const principal = amount(value(row,'Amount','Principal','Loan Amount'));
+    const rate = amount(value(row,'Intrest Rate','Interest Rate','Interest Rate (%)','Monthly Interest Rate'));
+    const tenure = amount(value(row,'Tenure','Tenure (Months)','Duration','Months'));
     const interest = principal * rate / 100 * tenure;
     const loanId = value(row,'Loan ID');
     const loanYear = yearOf(row);
     let guarantorRows = (data.guarantors || []).filter(g => loanId
       ? value(g,'Loan ID') === loanId
       : yearOf(g) === loanYear && [value(g,'Loaner'),value(g,'ID'),value(g,'Name')].includes(id));
-    const guarantors = guarantorRows.map(g => {
-      const gid = value(g,'Guarantor','Guarantor ID','Guarantor 1');
+    const guarantors = guarantorRows.flatMap(g => {
+      const ids = ['Guarantor','Guarantor ID','Guarantor 1','Guarantor 2','Guarantor 3'].map(k => value(g,k)).filter(Boolean);
+      return [...new Set(ids)].map(gid => {
       const gu = userMap.get(gid);
       const isContributor = (data.collections || []).some(x => yearOf(x) === loanYear && [value(x,'ID'),value(x,'Name')].includes(gid));
       const isCommittee = (data.committee || []).some(x => yearOf(x) === loanYear && [value(x,'ID'),value(x,'Name')].includes(gid));
-      return {id:gid,name:value(gu,'Name') || gid,village:value(gu,'Village'),isContributor,isCommittee};
+      return {id:gid,name:value(gu,'Name (Hindi)','Name') || gid,village:value(gu,'Village'),isContributor,isCommittee};
+      });
     });
     return {id,name:value(user,'Name') || value(row,'Name') || id || 'Loan record',loanId,principal,rate,tenure,interest,total:principal+interest,year:loanYear,guarantors};
   });
