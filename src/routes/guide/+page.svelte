@@ -1,3 +1,4 @@
+<script lang="ts">import BottomNav from "$lib/components/BottomNav.svelte";</script>
 <svelte:head><title>User Guide — Chhath Puja</title><meta name="description" content="How to use the Chhath Puja public transparency portal." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
 <main class="page">
@@ -12,4 +13,4 @@
   <section class="journey"><div><p class="eyebrow">INSTALL ON YOUR PHONE</p><h2>Keep the portal handy.</h2><p>Open Menu → Install app. If your browser does not offer an install prompt, use its menu and select “Add to Home screen” where available.</p></div></section>
   <a class="back-link" href="/">← Back to home</a>
 </main>
-<script>/* navigation supplied by the shared layout */</script>
+<BottomNav />
