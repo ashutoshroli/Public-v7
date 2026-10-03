@@ -30,7 +30,7 @@
   $: source = data || ({users:[],collections:[],loans:[],loanConsents:[],generatedFiles:[]} as unknown as PortalData);
   $: villageOptions = [...new Map((source.users || []).map(u => {
     const row = u as Record<string,unknown>, en = value(row,'Village'), hi = value(row,'Village (Hindi)',en);
-    return [en || hi,{value:en || hi,en:en || hi,hi:hi || en || hi}];
+    return [en || hi,{value:en || hi,en:en || hi,hi:hi || en || hi}] as const;
   }).filter(([key]) => Boolean(key))).values()].sort((a,b) => ($lang === 'hi' ? a.hi : a.en).localeCompare($lang === 'hi' ? b.hi : b.en));
   $: people = selectedVillage && nameQuery.trim() ? peopleInVillage(source,selectedVillage,nameQuery.trim(),1000).sort((a,b)=>displayName(a).localeCompare(displayName(b))) : [];
   $: person = (source.users || []).find(u => value(u as Record<string,unknown>,'ID') === selectedPerson);
