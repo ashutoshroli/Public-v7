@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
   import BottomNav from '$lib/components/BottomNav.svelte';
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[]; users?: Row[]; generatedFiles?: Row[]; generated_files?: Row[]; loanConsents?: Row[]; loan_consents?: Row[] };
@@ -48,13 +49,13 @@
     })
   ];
   $: visible = documents.filter(d=>(selectedYear==='All'||d.year===selectedYear) && [d.name,d.year,d.kind,d.recordId].join(' ').toLowerCase().includes(query.toLowerCase()));
-  onMount(async () => {
-    try { const res = await fetch(API); if (!res.ok) throw new Error('Public records are temporarily unavailable.');
-      const raw = await res.json(); data = raw.data && typeof raw.data === 'object' ? raw.data : raw;
-    } catch(e) { error = e instanceof Error ? e.message : 'Unable to load public documents.'; }
-    finally { loading = false; }
-  });
-</script>
+  const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });
+  const unsubscribeLoading = portalLoading.subscribe((value) => { loading = value; });
+  const unsubscribeError = portalError.subscribe((value) => { error = value; });
+  onMount(() => {
+    void loadPortalData().catch(() => {});
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
+  });</script>
 <svelte:head><title>Downloads — Chhath Puja</title><meta name="description" content="Public receipts, certificates and consent documents." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
 <main class="page">
