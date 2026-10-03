@@ -1,15 +1,19 @@
 <script lang="ts">
   import { page } from '$app/stores';
+  import { lang, tr } from '$lib/stores/lang';
   let open = false;
   let showNotifications = false;
   let installHint = '';
   type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{outcome:string}> };
   let installPrompt: InstallPrompt | null = null;
   const items = [
-    { href: '/downloads/', label: 'Downloads', detail: 'Public records and documents', icon: '⇩' },
-    { href: '/committee/', label: 'Committee', detail: 'Committee information', icon: '♙' },
-    { href: '/donate/', label: 'Donate Now', detail: 'Support community Chhath Puja', icon: '♡' },
-    { href: '/guide/', label: 'User Guide', detail: 'Portal help and app installation', icon: 'ⓘ' },
+    { href: '/downloads/', labelKey: 'nav_downloads', detail: 'Public records and documents', icon: '⇩' },
+    { href: '/committee/', labelKey: 'nav_committee', detail: 'Committee information', icon: '♙' },
+    { href: '/donate/', labelKey: 'nav_donate', detail: 'Support community Chhath Puja', icon: '♡' },
+    { href: '/guide/', labelKey: 'guide_title', detail: 'Portal help and app installation', icon: 'ⓘ' },
+    { href: '/verify/', labelKey: 'verify_title', detail: 'Check a published document', icon: '✓' },
+    { href: '/privacy/', labelKey: 'footer_privacy', detail: 'How public portal data is handled', icon: '⌑' },
+    { href: '/terms/', labelKey: 'footer_terms', detail: 'Portal terms of use', icon: '§' },
   ];
   $: activePath = $page.url.pathname;
   let lastPath = activePath;
@@ -53,16 +57,16 @@
   <div class="menu-overlay" role="presentation" onclick={(e) => { if (e.target === e.currentTarget) open = false; }}>
     <dialog open class="menu-sheet" aria-label="Menu">
       <div class="menu-grabber"></div>
-      <header class="menu-sheet-head"><div><p class="eyebrow">CHHATH PUJA PORTAL</p><h2>{showNotifications ? 'Notifications' : 'Menu'}</h2></div><button class="menu-close" type="button" aria-label="Close menu" onclick={() => {open = false; showNotifications = false;}}>×</button></header>
+      <header class="menu-sheet-head"><div><p class="eyebrow">CHHATH PUJA PORTAL</p><h2>{showNotifications ? $tr('notif_title') : $tr('nav_more')}</h2></div><button class="menu-close" type="button" aria-label={$lang === 'hi' ? 'मेनू बंद करें' : 'Close menu'} onclick={() => {open = false; showNotifications = false;}}>×</button></header>
       {#if showNotifications}
-        <div class="menu-notice"><div class="notification-toolbar"><strong>Inbox · {$inbox.length}</strong><span></span><button class="menu-secondary" disabled={$unreadCount === 0} onclick={markAllRead}>Mark all read ({$unreadCount})</button><button class="menu-secondary" disabled={$inbox.length === 0} onclick={clearAll}>Clear all</button></div>{#if $inbox.length}<div class="notification-list">{#each $inbox as note (note.id)}<article class:notification-unread={!note.read} class="notification-item"><strong>{note.title}</strong>{#if note.body}<p>{note.body}</p>{/if}<small>{new Date(note.receivedAt).toLocaleString()}</small><a href={note.url.startsWith('/') ? note.url : '/'} onclick={() => { open = false; }}>Open ↗</a></article>{/each}</div>{:else}<span class="menu-big-icon">♧</span><strong>No notifications yet</strong><p>Notifications received and saved on this device will appear here.</p>{/if}<div class="push-optin"><NotifyButton /></div><button class="menu-secondary" onclick={() => showNotifications = false}>← Back to menu</button></div>
+        <div class="menu-notice"><div class="notification-toolbar"><strong>Inbox · {$inbox.length}</strong><span></span><button class="menu-secondary" disabled={$unreadCount === 0} onclick={markAllRead}>{$tr('notif_mark_read')} ({$unreadCount})</button><button class="menu-secondary" disabled={$inbox.length === 0} onclick={clearAll}>{$tr('notif_clear')}</button></div>{#if $inbox.length}<div class="notification-list">{#each $inbox as note (note.id)}<article class:notification-unread={!note.read} class="notification-item"><strong>{note.title}</strong>{#if note.body}<p>{note.body}</p>{/if}<small>{new Date(note.receivedAt).toLocaleString()}</small><a href={note.url.startsWith('/') ? note.url : '/'} onclick={() => { open = false; }}>Open ↗</a></article>{/each}</div>{:else}<span class="menu-big-icon">♧</span><strong>No notifications yet</strong><p>{$tr('notif_empty_p')}</p>{/if}<div class="push-optin"><NotifyButton /></div><button class="menu-secondary" onclick={() => showNotifications = false}>← {$tr('notif_back')}</button></div>
       {:else}
         <div class="menu-tools">
           <button class="menu-install" type="button" onclick={installApp}><span class="tool-icon">⇩</span><span><strong>Install app</strong><small>Add to your home screen</small></span></button>
-          <button class="menu-notifications" type="button" onclick={() => { refreshInbox(); showNotifications = true; }}><span class="tool-icon">♧</span><strong>Notifications</strong>{#if $unreadCount}<span class="notification-badge">{$unreadCount}</span>{/if}</button>
+          <button class="menu-notifications" type="button" onclick={() => { refreshInbox(); showNotifications = true; }}><span class="tool-icon">♧</span><strong>{$tr('notif_title')}</strong>{#if $unreadCount}<span class="notification-badge">{$unreadCount}</span>{/if}</button>
         </div>
         {#if installHint}<p class="menu-hint" role="status">{installHint}</p>{/if}
-        <nav class="menu-items" aria-label="More pages">{#each items as item}<a class:menu-item-active={activePath.startsWith(item.href)} href={item.href} onclick={() => open = false}><span class="menu-item-icon">{item.icon}</span><span class="menu-item-copy"><strong>{item.label}</strong><small>{item.detail}</small></span><span class="menu-chevron">›</span></a>{/each}</nav>
+        <nav class="menu-items" aria-label="More pages">{#each items as item}<a class:menu-item-active={activePath.startsWith(item.href)} href={item.href} onclick={() => open = false}><span class="menu-item-icon">{item.icon}</span><span class="menu-item-copy"><strong>{$tr(item.labelKey)}</strong><small>{item.detail}</small></span><span class="menu-chevron">›</span></a>{/each}</nav>
       {/if}
       <nav class="menu-legal" aria-label="Legal pages"><a href="/terms/" onclick={() => open = false}>Terms of use</a><a href="/privacy/" onclick={() => open = false}>Privacy</a><a href="/verify/" onclick={() => open = false}>Verify a document</a></nav><p class="menu-foot">Faith · Unity · Transparency</p>
     </dialog>
