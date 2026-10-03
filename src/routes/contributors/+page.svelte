@@ -2,6 +2,7 @@
   import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
+  import { portalLanguage, togglePortalLanguage, initPortalLanguage } from '$lib/stores/language';
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[]; users?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -11,6 +12,8 @@
   let selectedYear = String(new Date().getFullYear());
   let yearInitialized = false;
   let selectedPortalYearValue = '';
+  let language: 'en' | 'hi' = 'en';
+  const unsubscribeLanguage = portalLanguage.subscribe(value => { language = value; });
   let query = '';
   let filter = 'All';
   const value = (row: Row | undefined, ...keys: string[]) => {
@@ -64,15 +67,16 @@
   const unsubscribeError = portalError.subscribe((value) => { error = value; });
   const unsubscribeYear = selectedPortalYear.subscribe(value => { selectedPortalYearValue = value; });
   onMount(() => {
+    initPortalLanguage();
     void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); unsubscribeLanguage(); };
   });</script>
 <svelte:head><title>Contributors — Chhath Puja</title><meta name="description" content="Browse public contribution records for Shaharpura Chhath Puja." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
+<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === 'en' ? 'EN / हिंदी' : 'हिंदी / EN'}</button><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
 <main class="page">
-  <p class="eyebrow">PUBLIC LEDGER / CONTRIBUTIONS</p><h1>Contributors<span>.</span></h1><p class="lede">Browse community contributions by name and year.</p>
+  <p class="eyebrow">PUBLIC LEDGER / CONTRIBUTIONS</p><h1>{language === 'hi' ? 'योगदानकर्ता' : 'Contributors'}<span>.</span></h1><p class="lede">{language === 'hi' ? 'नाम और वर्ष के अनुसार सामुदायिक योगदान देखें।' : 'Browse community contributions by name and year.'}</p>
   <section class="summary contributor-summary"><article class="budget-card"><p class="eyebrow">TOTAL CONTRIBUTED · {selectedYear}</p><strong>{money(total)}</strong><div class="budget-foot"><span>{contributors.length} contributors shown</span><span>{selectedYear}</span></div></article></section>
-  <label class="search full-search"><span aria-hidden="true">⌕</span><input bind:value={query} placeholder="Search by name…" aria-label="Search contributors" /></label>
+  <label class="search full-search"><span aria-hidden="true">⌕</span><input bind:value={query} placeholder="{language === 'hi' ? 'नाम से खोजें…' : 'Search by name…'}" aria-label="Search contributors" /></label>
   <div class="filter-strip" aria-label="Filter by contribution type">{#each ['All','Cash','Material','Service'] as f}<button class:active={filter===f} onclick={()=>filter=f}>{f}</button>{/each}</div>
   {#if loading}<div class="loading" aria-label="Loading contributors"><span></span><span></span><span></span></div>{:else if error}<p class="notice" role="status">{error}</p>{:else}
     <section class="section-head"><div><p class="eyebrow">COMMUNITY · {contributors.length} CONTRIBUTORS</p><h2>Contribution records</h2></div></section>
