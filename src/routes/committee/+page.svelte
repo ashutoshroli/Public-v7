@@ -3,8 +3,9 @@
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
   type Row = Record<string, unknown>;
+  type PortalData = { committee?: Row[]; users?: Row[] };
+  let data: PortalData = {};
   let rows: Row[] = [], users: Row[] = [], loading = true, error = '';
-  const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
   const value = (r: Row | undefined, ...keys: string[]) => {
     if (!r) return '';
     for (const key of keys) {
@@ -16,6 +17,8 @@
     }
     return '';
   };
+  $: rows = data.committee || [];
+  $: users = data.users || [];
   $: userMap = new Map(users.map(u => [value(u,'ID'),u]).filter(([id]) => !!id) as [string,Row][]);
   $: members = rows.map(r => {
     const id = value(r,'ID','Name');
