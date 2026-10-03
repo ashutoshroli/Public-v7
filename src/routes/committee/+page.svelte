@@ -37,7 +37,7 @@
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
   });</script>
 <svelte:head><title>Committee — Chhath Puja</title><meta name="description" content="Committee information for Shaharpura Chhath Puja." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
+
 <main class="page">
   <p class="eyebrow">COMMUNITY / ORGANISATION</p><h1>Committee<span>.</span></h1><p class="lede">Navyuvak Chhath Puja Samiti, Shaharpura, Gardih.</p>
   <section class="journey"><div><p class="eyebrow">OUR PURPOSE</p><h2>Faith · Service · Transparency</h2><p>The committee organises community Chhath Puja activities and publishes available contribution and expense records through this portal.</p></div></section>

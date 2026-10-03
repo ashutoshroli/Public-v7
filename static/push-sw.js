@@ -11,7 +11,7 @@ function tellClients(type){return self.clients.matchAll({type:'window',includeUn
 self.addEventListener('push',function(event){
  var payload={};if(event.data){try{payload=event.data.json()||{};}catch(e){try{payload={body:event.data.text()};}catch(e2){payload={};}}}
  var title=String(payload.title||'Chhath Puja'),body=String(payload.body||''),url=safePath(payload.url,self.location.origin),tag=String(payload.tag||'chhath');
- var options={body:body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',tag:tag,renotify:false,data:{url:url}};
+ var options={body:body,icon:'/icons/icon-192.svg',badge:'/icons/icon-192.svg',tag:tag,renotify:false,data:{url:url}};
  event.waitUntil(Promise.all([
   self.registration.showNotification(title,options),
   saveItem({title:title,body:body,url:url,tag:tag,receivedAt:Date.now(),read:0}).then(function(){return tellClients('push-received');}).catch(function(){})

@@ -1,6 +1,6 @@
 <script lang="ts">import BottomNav from "$lib/components/BottomNav.svelte"; import NotifyButton from "$lib/components/NotifyButton.svelte";</script>
 <svelte:head><title>User Guide — Chhath Puja</title><meta name="description" content="How to use the Chhath Puja public transparency portal." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
+
 <main class="page">
   <p class="eyebrow">HELP CENTRE</p><h1>User Guide<span>.</span></h1><p class="lede">How to browse community records and use this portal on your phone.</p>
   <section class="records guide-records">

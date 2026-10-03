@@ -70,7 +70,7 @@
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
 <svelte:head><title>Loans — Chhath Puja</title><meta name="description" content="Browse public loan and repayment records for Shaharpura Chhath Puja." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
+
 <main class="page">
   <p class="eyebrow">PUBLIC LEDGER / LOANS</p><h1>Loans & Returns<span>.</span></h1><p class="lede">Browse recorded loans and repayment information.</p>
   <section class="summary expense-summary">

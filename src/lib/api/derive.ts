@@ -103,7 +103,7 @@ export interface Financials {
 }
 
 export function computeFinancials(data: PortalData, sel: YearSel): Financials {
-  const collection = collectionsForYear(data, sel).reduce((s, c) => s + parseAmt(c.Amount), 0);
+  const collection = collectionsForYear(data, sel).reduce((s, c) => s + (truthyResell(c['Is Resell']) ? 0 : parseAmt(c.Amount)), 0);
 
   // Past Loan Returned: per-year uses the PREVIOUS year's loans; All uses all.
   const prevLoans = isAll(sel)

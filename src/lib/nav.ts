@@ -1,15 +1,11 @@
-export interface NavItem {
-  href: string;
-  label: string;
-}
-
+export interface NavItem { href: string; key: string; }
 export const navItems: NavItem[] = [
-  { href: '/', label: 'Home' },
-  { href: '/contributors/', label: 'Contributors' },
-  { href: '/expenses/', label: 'Expenses' },
-  { href: '/loans/', label: 'Loans' },
-  { href: '/committee/', label: 'Committee' },
-  { href: '/decade/', label: 'Our Journey' },
-  { href: '/downloads/', label: 'Downloads' },
-  { href: '/donate/', label: 'Donate' }
+  { href: '/', key: 'nav_home' },
+  { href: '/contributors/', key: 'contributors_list' },
+  { href: '/expenses/', key: 'nav_expenses' },
+  { href: '/loans/', key: 'nav_loans' },
+  { href: '/committee/', key: 'nav_committee' },
+  { href: '/decade/', key: 'decade_title' },
+  { href: '/downloads/', key: 'download_center' },
+  { href: '/donate/', key: 'donate_title' }
 ];

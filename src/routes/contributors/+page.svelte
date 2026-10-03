@@ -68,7 +68,7 @@
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
 <svelte:head><title>Contributors — Chhath Puja</title><meta name="description" content="Browse public contribution records for Shaharpura Chhath Puja." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
+
 <main class="page">
   <p class="eyebrow">PUBLIC LEDGER / CONTRIBUTIONS</p><h1>Contributors<span>.</span></h1><p class="lede">Browse community contributions by name and year.</p>
   <section class="summary contributor-summary"><article class="budget-card"><p class="eyebrow">TOTAL CONTRIBUTED · {selectedYear}</p><strong>{money(total)}</strong><div class="budget-foot"><span>{contributors.length} contributors shown</span><span>{selectedYear}</span></div></article></section>

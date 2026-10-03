@@ -68,7 +68,7 @@
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
 <svelte:head><title>Downloads — Chhath Puja</title><meta name="description" content="Public receipts, certificates and consent documents." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
+
 <main class="page">
   <p class="eyebrow">PUBLIC DOCUMENTS / GENERATED FILES</p><h1>Downloads<span>.</span></h1><p class="lede">Published receipts, material records, certificates and accepted loan consent documents.</p>
   <div class="header-actions"><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Filter downloads by year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div>

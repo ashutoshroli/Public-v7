@@ -1,78 +1,44 @@
 <script lang="ts">
-  import BottomNav from "$lib/components/BottomNav.svelte";
-  import { onMount } from 'svelte';
-  import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
-
-  type Row = Record<string, unknown>;
-  type PortalData = { collections?: Row[]; expenses?: Row[]; loans?: Row[]; committee?: Row[]; users?: Row[] };
-  let data: PortalData = {};
-  let years = Array.from({ length: 10 }, (_, i) => 2017 + i);
-  let active = 2017;
-  let counts = 0;
-  let cashTotal = 0;
-  let peopleCount = 0;
-  let loading = true;
-  let error = '';
-
-  const value = (row: Row, ...keys: string[]) => {
-    for (const key of keys) {
-      if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]).trim();
-      const norm = key.trim().toLowerCase().replace(/\s+/g,' ');
-      const actual = Object.keys(row).find(k => k.trim().toLowerCase().replace(/\s+/g,' ') === norm);
-      if (actual && row[actual] !== undefined && row[actual] !== null && String(row[actual]).trim()) return String(row[actual]).trim();
-    }
-    return '';
-  };
-  const yearOf = (row: Row) => value(row,'Year','year');
-  const amountOf = (v: unknown) => { const n = Number(String(v ?? '').replace(/[^0-9.-]/g,'')); return Number.isFinite(n) ? n : 0; };
-  const isResell = (row: Row) => ['true','1','yes'].includes(value(row,'Is Resell').toLowerCase());
-  const isCash = (row: Row) => ['1','cash','money','monetary',''].includes(value(row,'Contribution Type','Type').toLowerCase());
-  function updateCount(year: number) {
-    const rows = (data.collections || []).filter(row => yearOf(row) === String(year) && !isResell(row));
-    counts = rows.length;
-    cashTotal = rows.reduce((sum,row) => sum + (isCash(row) ? amountOf(value(row,'Amount')) : 0),0);
-    peopleCount = new Set(rows.map(row => value(row,'ID','Name')).filter(Boolean)).size;
-  }
-
-  const unsubscribeData = portalData.subscribe(value => {
-    data = value as PortalData;
-    const all = [...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])];
-    const seen = [...new Set(all.map(yearOf).filter(year => /^20\d{2}$/.test(year)))].map(Number).sort((a,b)=>a-b);
-    if (seen.length) {
-      years = [...new Set([...seen,2026])].sort((a,b)=>a-b);
-      if (!years.includes(active)) active = years[0];
-    }
-    updateCount(active);
-  });
-  const unsubscribeLoading = portalLoading.subscribe(value => { loading = value; });
-  const unsubscribeError = portalError.subscribe(value => { error = value; });
-  const unsubscribeYear = selectedPortalYear.subscribe(value => { const year = Number(value); if (Number.isFinite(year) && years.includes(year)) { active = year; updateCount(year); } });
-  onMount(() => {
-    void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
-  });
-
-  function selectYear(year: number) {
-    active = year;
-    selectedPortalYear.set(String(year));
-    updateCount(year);
-  }
+  import BottomNav from '$lib/components/BottomNav.svelte';
+  import { portalState, year, selectedPortalYear } from '$lib/stores/portal';
+  import { lang, tr } from '$lib/stores/lang';
+  import { decadeStats, journeyEntries, journeyTagline, journeyText } from '$lib/api/derive';
+  import { formatMoney } from '$lib/utils/format';
+  let active = $state(new Date().getFullYear());
+  const stats = $derived(decadeStats($portalState.data));
+  const entries = $derived(journeyEntries($portalState.data));
+  const tagline = $derived(journeyTagline($portalState.data));
+  const pageText = $derived(journeyText($portalState.data, $lang));
+  const years = $derived(stats.years);
+  const activeStats = $derived(years.find((item) => item.year === active) ?? years[years.length - 1]);
+  const activeEntry = $derived(entries.find((item) => item.year === active) ?? null);
+  const activeTitle = $derived(($lang === 'hi' ? activeEntry?.titleHi : activeEntry?.titleEn) || '');
+  const activeContent = $derived(($lang === 'hi' ? activeEntry?.contentHi : activeEntry?.contentEn) || '');
+  const heading = $derived(pageText.title || $tr('decade_title'));
+  const subtitle = $derived(pageText.subtitle || ($lang === 'hi' ? tagline.hi : tagline.en) || $tr('decade_sub'));
+  const intro = $derived(pageText.intro || $tr('decade_intro'));
+  const fmt = (n: number) => formatMoney(n);
+  function selectYear(y: number) { active = y; year.set(y); selectedPortalYear.set(String(y)); }
+  $effect(() => { if (years.length && !years.some((item) => item.year === active)) active = years[years.length - 1].year; });
 </script>
-
-<svelte:head>
-  <title>Our Journey — Chhath Puja</title>
-  <meta name="description" content="Explore the Shaharpura Chhath Puja community's journey by year." />
-</svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
+<svelte:head><title>{$tr('decade_title')} — {$tr('app_title')}</title><meta name="description" content="Explore the Shaharpura Chhath Puja community journey, with live yearly records and published milestones."/></svelte:head>
 <main class="page journey-page">
-  <p class="eyebrow">OUR JOURNEY / 2017—2026</p>
-  <h1>A decade of<br /><span>showing up.</span></h1>
-  <p class="lede">छठी मैया के आशीर्वाद, समुदाय के सहयोग और पारदर्शिता की यात्रा।</p>
-  {#if error}<p class="notice" role="status">{error} Showing the published year range.</p>{/if}
-  <div class="year-strip" aria-label="Choose a year">
-    {#each years as y}<button class:active={active===y} aria-pressed={active===y} onclick={() => selectYear(y)}>{y}</button>{/each}
-  </div>
-  <section class="journey-feature" aria-live="polite"><p class="eyebrow">YEAR IN FOCUS</p><strong class="journey-year">{active}</strong><h2>One community. A shared commitment.</h2><p>Every contribution and every recorded expense is part of our shared story.</p><div class="journey-stat"><span>Contribution records{loading ? ' · Loading' : ''}</span><strong>{counts}</strong></div><div class="journey-stat"><span>Unique contributor IDs</span><strong>{peopleCount}</strong></div><div class="journey-stat"><span>Cash contributions</span><strong>{new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(cashTotal)}</strong></div></section>
-  <a class="back-link" href="/">← Back to public ledger</a>
-</main>
-<BottomNav />
+  <p class="eyebrow">{$lang === 'hi' ? 'हमारी यात्रा' : 'OUR JOURNEY'} / {stats.startYear}—{stats.endYear}</p>
+  <h1>{heading}<span>.</span></h1><p class="lede">{subtitle}</p><p class="lede">{intro}</p>
+  <section class="summary stat-row">
+    <article class="stat-tile"><small>{$lang === 'hi' ? 'कुल नकद योगदान' : 'Total monetary contributions'}</small><strong>{fmt(stats.grandTotal)}</strong></article>
+    <article class="stat-tile"><small>{$lang === 'hi' ? 'योगदान रिकॉर्ड' : 'Contribution entries'}</small><strong>{stats.grandContributors}</strong></article>
+    <article class="stat-tile"><small>{$lang === 'hi' ? 'वर्ष' : 'Years covered'}</small><strong>{stats.years.length}</strong></article>
+  </section>
+  <div class="year-strip" aria-label="Choose a year">{#each years as item (item.year)}<button class:active={active === item.year} aria-pressed={active === item.year} onclick={() => selectYear(item.year)}>{item.year}{item.isCurrent ? ' ·' : ''}</button>{/each}</div>
+  {#if activeStats}<section class="journey-feature" aria-live="polite">
+    <p class="eyebrow">{$lang === 'hi' ? 'चुना हुआ वर्ष' : 'YEAR IN FOCUS'}{activeStats.isCurrent ? ' · ' + ($lang === 'hi' ? 'वर्तमान' : 'CURRENT') : ''}</p>
+    <strong class="journey-year">{activeStats.year}</strong>
+    <h2>{activeTitle || ($lang === 'hi' ? 'समुदाय, सेवा और साझा संकल्प' : 'One community. A shared commitment.')}</h2>
+    <p>{activeContent || ($lang === 'hi' ? 'हर प्रकाशित योगदान और खर्च हमारी साझा यात्रा का हिस्सा है।' : 'Every published contribution and recorded expense is part of our shared story.')}</p>
+    <div class="journey-stat"><span>{$lang === 'hi' ? 'योगदानकर्ता रिकॉर्ड' : 'Contributor entries'}</span><strong>{activeStats.contributors}</strong></div>
+    <div class="journey-stat"><span>{$lang === 'hi' ? 'नकद योगदान' : 'Monetary contributions'}</span><strong>{fmt(activeStats.total)}</strong></div>
+  </section>{/if}
+  {#if $portalState.stale}<p class="notice" role="status">{$tr('stale_notice')}</p>{/if}
+  <a class="back-link" href="/">← {$lang === 'hi' ? 'मुख्य पृष्ठ' : 'Back to public ledger'}</a>
+</main><BottomNav />

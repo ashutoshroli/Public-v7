@@ -45,7 +45,7 @@
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
 <svelte:head><title>Expenses — Chhath Puja</title><meta name="description" content="Browse recorded expenses for Shaharpura Chhath Puja." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
+
 <main class="page">
   <p class="eyebrow">PUBLIC LEDGER / SPENDING</p><h1>Expenses<span>.</span></h1><p class="lede">Browse recorded spending and filter transactions by year, category or description.</p>
   <section class="summary expense-summary"><article class="metric expense-total-card"><span class="metric-label">Total expenses · {selectedYear}</span><strong>{money(total)}</strong><span class="metric-note">{records.length} matching records</span></article><article class="metric"><span class="metric-label">Transactions</span><strong>{records.length}</strong><span class="metric-note">Matching records</span></article></section>

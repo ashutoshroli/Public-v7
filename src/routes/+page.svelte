@@ -87,20 +87,7 @@
   <meta name="theme-color" content="#f8f8f5" />
 </svelte:head>
 
-<header class="topbar">
-  <a class="brand" href="/" aria-label="Chhath Puja home">
-    <span class="sun" aria-hidden="true">☼</span>
-    <span><strong>Chhath Puja</strong><small>Transparency Portal</small></span>
-  </a>
-  <div class="header-actions">
-    <span class="language" aria-label="Language options not available yet">EN / हिंदी</span>
-    <label class="year-picker"><span class="sr-only">Select year</span>
-      <select bind:value={selectedYear} aria-label="Select year">
-        {#each years as y}<option value={y}>{y}</option>{/each}
-      </select>
-    </label>
-  </div>
-</header>
+
 
 <main class="page">
   <section class="intro">
