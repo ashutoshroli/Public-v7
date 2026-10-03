@@ -54,7 +54,7 @@
       {#if selectedVillage && nameQuery.trim()}
         <div class="search-results" role="listbox" aria-label={text('Matching people','मिलते-जुलते नाम')}>
           {#each people as p}
-            <button type="button" class="person-option" onclick={() => { selectedPerson = value(p as Record<string,unknown>, 'ID'); nameQuery = $lang === 'hi' ? value(p as Record<string,unknown>, 'Name (Hindi)', value(p as Record<string,unknown>, 'Name')) : value(p as Record<string,unknown>, 'Name', value(p as Record<string,unknown>, 'Name (Hindi)'))); }}>
+            <button type="button" class="person-option" onclick={() => { selectedPerson = value(p as Record<string,unknown>, 'ID'); nameQuery = $lang === 'hi' ? value(p as Record<string,unknown>, 'Name (Hindi)', value(p as Record<string,unknown>, 'Name')) : value(p as Record<string,unknown>, 'Name', value(p as Record<string,unknown>, 'Name (Hindi'))); }}>
               <span>{ $lang === 'hi' ? value(p as Record<string,unknown>, 'Name (Hindi)', value(p as Record<string,unknown>, 'Name')) : value(p as Record<string,unknown>, 'Name', value(p as Record<string,unknown>, 'Name (Hindi'))) }</span><span aria-hidden="true">›</span>
             </button>
           {:else}
