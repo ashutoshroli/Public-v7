@@ -40,7 +40,7 @@
     void loadPortalData().catch(() => {});
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeLanguage(); };
   });</script>
-<svelte:head><title>Committee — Chhath Puja</title><meta name="description" content="Committee information for Shaharpura Chhath Puja." /></svelte:head>
+<svelte:head><title>{language === 'hi' ? 'समिति — छठ पूजा' : 'Committee — Chhath Puja'}</title><meta name="description" content="Committee information for Shaharpura Chhath Puja." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === 'en' ? 'EN / हिंदी' : 'हिंदी / EN'}</button><a class="language" href="/">← Home</a></div></header>
 <main class="page">
   <p class="eyebrow">COMMUNITY / ORGANISATION</p><h1>{language === 'hi' ? 'समिति' : 'Committee'}<span>.</span></h1><p class="lede">{language === 'hi' ? 'नवयुवक छठ पूजा समिति, शहरपुरा, गरडीह।' : 'Navyuvak Chhath Puja Samiti, Shaharpura, Gardih.'}</p>
