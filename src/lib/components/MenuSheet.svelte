@@ -12,11 +12,26 @@
     { href: '/committee/', label: 'Committee', detail: 'Committee information', icon: '♙' }
   ];
   $: activePath = $page.url.pathname;
+  let lastPath = activePath;
   import { onMount } from 'svelte';
+  $: if (activePath !== lastPath) {
+    lastPath = activePath;
+    open = false;
+    showNotifications = false;
+  }
+  $: if (typeof document !== 'undefined') document.body.style.overflow = open ? 'hidden' : '';
   onMount(() => {
     const handler = (event: Event) => { event.preventDefault(); installPrompt = event as InstallPrompt; };
+    const keyHandler = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && open) { open = false; showNotifications = false; }
+    };
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener('keydown', keyHandler);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('keydown', keyHandler);
+      document.body.style.overflow = '';
+    };
   });
   async function installApp() {
     if (!installPrompt) {
