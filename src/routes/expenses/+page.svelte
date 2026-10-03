@@ -1,7 +1,7 @@
 <script lang="ts">
   import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
-  import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
+  import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
   type Row = Record<string, unknown>;
   type PortalData = { expenses?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -9,6 +9,7 @@
   let loading = true;
   let error = '';
   let selectedYear = String(new Date().getFullYear());
+  let selectedPortalYearValue = '';
   let query = '';
   let filter = 'All';
   const value = (row: Row, ...keys: string[]) => {
@@ -25,15 +26,18 @@
   const descriptionOf = (r: Row) => value(r,'Discription','Discription (Hindi)','Description','Description (Hindi)','description','Name') || 'Expense record';
   $: yearsAvailable = [...new Set((data.expenses || []).map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
   $: if (yearsAvailable.length && !yearsAvailable.includes(selectedYear)) selectedYear = yearsAvailable[0];
+  $: if (yearsAvailable.length && selectedPortalYearValue && yearsAvailable.includes(selectedPortalYearValue)) selectedYear = selectedPortalYearValue;
+  $: if (yearsAvailable.length && selectedYear) selectedPortalYear.set(selectedYear);
   $: years = yearsAvailable.length ? yearsAvailable : [selectedYear];
   $: records = (data.expenses || []).filter(row => yearOf(row) === selectedYear && (filter === 'All' || categoryOf(row).toLowerCase() === filter.toLowerCase()) && (descriptionOf(row).toLowerCase().includes(query.toLowerCase()) || categoryOf(row).toLowerCase().includes(query.toLowerCase())));
   $: total = records.reduce((sum,row)=>sum+amount(value(row,'Amount','amount')),0);
   const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });
   const unsubscribeLoading = portalLoading.subscribe((value) => { loading = value; });
   const unsubscribeError = portalError.subscribe((value) => { error = value; });
+  const unsubscribeYear = selectedPortalYear.subscribe(value => { selectedPortalYearValue = value; });
   onMount(() => {
     void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
 <svelte:head><title>Expenses — Chhath Puja</title><meta name="description" content="Browse recorded expenses for Shaharpura Chhath Puja." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
