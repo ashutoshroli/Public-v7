@@ -1,42 +1,15 @@
 import { writable, derived } from 'svelte/store';
-
-export type InboxItem = { id: number; title: string; body: string; url: string; receivedAt: number; read: boolean };
-const KEY = 'chhath-public-v7-inbox-v1';
-const items = writable<InboxItem[]>([]);
-export const inbox = { subscribe: items.subscribe };
-export const unreadCount = derived(items, rows => rows.filter(row => !row.read).length);
-
-function readSaved(): InboxItem[] {
-  if (typeof localStorage === 'undefined') return [];
-  try {
-    const value = JSON.parse(localStorage.getItem(KEY) || '[]');
-    return Array.isArray(value) ? value.filter(row => row && typeof row.title === 'string') : [];
-  } catch { return []; }
-}
-function save(rows: InboxItem[]) {
-  try { if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, JSON.stringify(rows)); } catch { /* storage may be unavailable */ }
-}
-export function refreshInbox() { items.set(readSaved()); }
-export function addNotification(input: {title:string; body?:string; url?:string}) {
-  const rows = readSaved();
-  rows.unshift({ id: Date.now(), title: input.title, body: input.body || '', url: input.url || '/', receivedAt: Date.now(), read: false });
-  save(rows.slice(0,100)); items.set(readSaved());
-}
-export function markAllRead() { const rows = readSaved().map(row => ({...row, read:true})); save(rows); items.set(rows); }
-export function clearAll() { save([]); items.set([]); }
-export function initInbox(): () => void {
-  refreshInbox();
-  const onStorage = (event: StorageEvent) => { if (event.key === KEY) refreshInbox(); };
-  const onServiceWorkerMessage = (event: MessageEvent) => {
-    const data = event.data as { type?: string; title?: string; body?: string; url?: string } | null;
-    if (!data) return;
-    if (data.type === 'push-received') refreshInbox();
-    if (data.type === 'notification-received' && data.title) addNotification({ title: data.title, body: data.body, url: data.url });
-  };
-  if (typeof window !== 'undefined') window.addEventListener('storage', onStorage);
-  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', onServiceWorkerMessage);
-  return () => {
-    if (typeof window !== 'undefined') window.removeEventListener('storage', onStorage);
-    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) navigator.serviceWorker.removeEventListener('message', onServiceWorkerMessage);
-  };
+import { listInbox, markInboxRead, clearInbox, type InboxItem } from '$lib/notifications';
+const items=writable<InboxItem[]>([]);
+export const inbox={subscribe:items.subscribe};
+export const unreadCount=derived(items,rows=>rows.filter(row=>!row.read).length);
+export async function refreshInbox(){items.set(await listInbox());}
+export async function markAllRead(){await markInboxRead();await refreshInbox();}
+export async function clearAll(){await clearInbox();await refreshInbox();}
+export function initInbox():()=>void{
+ void refreshInbox();
+ if(typeof navigator==='undefined'||!('serviceWorker' in navigator))return ()=>{};
+ const onMessage=(event:MessageEvent)=>{if((event.data as {type?:string}|null)?.type==='push-received')void refreshInbox();};
+ navigator.serviceWorker.addEventListener('message',onMessage);
+ return ()=>navigator.serviceWorker.removeEventListener('message',onMessage);
 }
