@@ -64,7 +64,7 @@
         {#if installHint}<p class="menu-hint" role="status">{installHint}</p>{/if}
         <nav class="menu-items" aria-label="More pages">{#each items as item}<a class:menu-item-active={activePath.startsWith(item.href)} href={item.href} onclick={() => open = false}><span class="menu-item-icon">{item.icon}</span><span class="menu-item-copy"><strong>{item.label}</strong><small>{item.detail}</small></span><span class="menu-chevron">›</span></a>{/each}</nav>
       {/if}
-      <p class="menu-foot">Faith · Unity · Transparency</p>
+      <nav class="menu-legal" aria-label="Legal pages"><a href="/terms/" onclick={() => open = false}>Terms of use</a><a href="/privacy/" onclick={() => open = false}>Privacy</a><a href="/verify/" onclick={() => open = false}>Verify a document</a></nav><p class="menu-foot">Faith · Unity · Transparency</p>
     </section>
   </div>
 {/if}
@@ -80,4 +80,6 @@
   .notification-item a { justify-self:start; font-weight:700; color:#c65b08; }
   .notification-badge { display:inline-grid; place-items:center; min-width:1.25rem; height:1.25rem; padding:0 .25rem; border-radius:999px; background:#c65b08; color:white; font-size:.75rem; }
   .menu-secondary:disabled { opacity:.45; cursor:not-allowed; }
+  .menu-legal{display:flex;flex-wrap:wrap;gap:1rem;padding:.9rem 0 .2rem;border-top:1px solid var(--border,#e5e7eb);font-size:.78rem;color:var(--muted,#68736e)}
+  .menu-legal a{text-decoration:underline;text-underline-offset:3px}
 </style>
