@@ -5,4 +5,4 @@ export const config = {
   renderChatUrl: import.meta.env.PUBLIC_CHAT_URL ?? '',
   mgmtLoginUrl: import.meta.env.PUBLIC_MGMT_LOGIN_URL ?? ''
 };
-export const apiUrl = (action: string) => `${config.apiBase}/?action=${encodeURIComponent(action)}`;
+export const apiUrl = (action: string, suffix = '') => `${config.apiBase}/?action=${encodeURIComponent(action)}${suffix}`;
