@@ -1,6 +1,7 @@
 <script lang="ts">
   import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
+  import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[]; users?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -52,16 +53,13 @@
     .filter(c => c.name.toLowerCase().includes(query.toLowerCase()) && (filter === 'All' || c.kinds.has(filter)))
     .sort((a,b)=>b.amount-a.amount);
   $: total = contributors.reduce((sum,c)=>sum+c.amount,0);
-  onMount(async () => {
-    try {
-      const res = await fetch(API);
-      if (!res.ok) throw new Error('Public records are temporarily unavailable.');
-      const raw = await res.json();
-      data = raw.data && typeof raw.data === 'object' ? raw.data : raw;
-    } catch (e) { error = e instanceof Error ? e.message : 'Unable to load contributor records.'; }
-    finally { loading = false; }
-  });
-</script>
+  const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });
+  const unsubscribeLoading = portalLoading.subscribe((value) => { loading = value; });
+  const unsubscribeError = portalError.subscribe((value) => { error = value; });
+  onMount(() => {
+    void loadPortalData().catch(() => {});
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
+  });</script>
 <svelte:head><title>Contributors — Chhath Puja</title><meta name="description" content="Browse public contribution records for Shaharpura Chhath Puja." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
 <main class="page">
