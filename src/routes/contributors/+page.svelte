@@ -28,7 +28,7 @@
   const yearOf = (r: Row) => value(r, 'Year', 'year');
   const kindOf = (r: Row): 'Cash' | 'Material' | 'Service' | 'Other' => {
     const type = value(r, 'Contribution Type', 'Contribution Type ', 'Type', 'type').trim().toLowerCase();
-    if (['1','cash','money','monetary'].includes(type)) return 'Cash';
+    if (['1','cash','money','monetary',''].includes(type)) return 'Cash';
     if (['2','material','samaan','सामान'].includes(type)) return 'Material';
     if (['3','service','work','सेवा','काम'].includes(type)) return 'Service';
     return 'Other';
