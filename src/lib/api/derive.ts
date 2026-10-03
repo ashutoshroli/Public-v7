@@ -854,8 +854,13 @@ export function peopleInVillage(
   limit = 50
 ): UserRow[] {
   const q = query.trim().toLowerCase();
+  const villageKey = village.trim();
   return (data.users || [])
-    .filter((u) => (u.Village ?? '').toString().trim() === village)
+    .filter((u) => {
+      const en = (u.Village ?? '').toString().trim();
+      const hi = (u['Village (Hindi)'] ?? '').toString().trim();
+      return en === villageKey || hi === villageKey;
+    })
     .filter((u) => {
       if (!q) return true;
       return (

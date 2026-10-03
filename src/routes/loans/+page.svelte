@@ -2,6 +2,9 @@
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
   import BottomNav from '$lib/components/BottomNav.svelte';
+  import { portalLanguage, togglePortalLanguage, initPortalLanguage } from '$lib/stores/language';
+  let language: 'en' | 'hi' = 'en';
+  const unsubLang = portalLanguage.subscribe(v => language = v);
   type Row = Record<string, unknown>;
   type PortalData = { loans?: Row[]; users?: Row[]; guarantors?: Row[]; collections?: Row[]; committee?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -47,12 +50,12 @@
       const gu = userMap.get(gid);
       const isContributor = (data.collections || []).some(x => yearOf(x) === loanYear && [value(x,'ID'),value(x,'Name')].includes(gid));
       const isCommittee = (data.committee || []).some(x => yearOf(x) === loanYear && [value(x,'ID'),value(x,'Name')].includes(gid));
-      return {id:gid,name:value(gu,'Name (Hindi)','Name') || gid,village:value(gu,'Village'),isContributor,isCommittee};
+      return {id:gid,name: language === 'hi' ? (value(gu,'Name (Hindi)','Name') || gid) : (value(gu,'Name') || gid),village: language === 'hi' ? (value(gu,'Village (Hindi)','Village') || '') : (value(gu,'Village','Village (Hindi)') || ''),isContributor,isCommittee};
       });
     });
     const repaid = amount(value(row,'Amount Returned','Returned Amount','Repaid Amount','Total Repaid','Paid Amount'));
     const outstanding = Math.max(0, principal + interest - repaid);
-    return {id,name:value(user,'Name (Hindi)','Name') || value(row,'Name (Hindi)','Name') || id || 'Loan record',loanId,principal,rate,tenure,interest,total:principal+interest,repaid,outstanding,year:loanYear,guarantors};
+    return {id,name: language === 'hi' ? (value(user,'Name (Hindi)','Name') || value(row,'Name (Hindi)','Name') || id || 'ऋण रिकॉर्ड') : (value(user,'Name') || value(row,'Name') || id || 'Loan record'),loanId,principal,rate,tenure,interest,total:principal+interest,repaid,outstanding,year:loanYear,guarantors};
   });
   $: visible = records.filter(r => {
     const q = query.toLowerCase();
@@ -66,24 +69,25 @@
   const unsubscribeError = portalError.subscribe((value) => { error = value; });
   const unsubscribeYear = selectedPortalYear.subscribe(value => { selectedPortalYearValue = value; });
   onMount(() => {
+    initPortalLanguage();
     void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); unsubLang(); };
   });</script>
 <svelte:head><title>Loans — Chhath Puja</title><meta name="description" content="Browse public loan and repayment records for Shaharpura Chhath Puja." /></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
+<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>{language === 'hi' ? 'पारदर्शिता पोर्टल' : 'Transparency Portal'}</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === 'hi' ? 'English' : 'हिंदी'}</button><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label={language === 'hi' ? 'वर्ष चुनें' : 'Select year'}>{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
 <main class="page">
-  <p class="eyebrow">PUBLIC LEDGER / LOANS</p><h1>Loans & Returns<span>.</span></h1><p class="lede">Browse recorded loans and repayment information.</p>
+  <p class="eyebrow">{language === 'hi' ? 'सार्वजनिक लेखा / ऋण' : 'PUBLIC LEDGER / LOANS'}</p><h1>{language === 'hi' ? 'ऋण और वापसी' : 'Loans & Returns'}<span>.</span></h1><p class="lede">{language === 'hi' ? 'दर्ज ऋण और भुगतान की जानकारी देखें।' : 'Browse recorded loans and repayment information.'}</p>
   <section class="summary expense-summary">
-    <article class="metric"><span class="metric-label">Loan amount</span><strong>{money(totalLoan)}</strong><span class="metric-note">For selected records</span></article>
-    <article class="metric expense-total-card"><span class="metric-label">Total with interest</span><strong>{money(totalWithInterest)}</strong><span class="metric-note">Principal + simple monthly interest</span></article>
+    <article class="metric"><span class="metric-label">{language === 'hi' ? 'ऋण राशि' : 'Loan amount'}</span><strong>{money(totalLoan)}</strong><span class="metric-note">{language === 'hi' ? 'चुने गए रिकॉर्ड के लिए' : 'For selected records'}</span></article>
+    <article class="metric expense-total-card"><span class="metric-label">{language === 'hi' ? 'ब्याज सहित कुल' : 'Total with interest'}</span><strong>{money(totalWithInterest)}</strong><span class="metric-note">{language === 'hi' ? 'मूलधन + साधारण मासिक ब्याज' : 'Principal + simple monthly interest'}</span></article>
   </section>
   
-  <label class="search full-search"><span aria-hidden="true">⌕</span><input bind:value={query} placeholder="Search borrower or purpose…" aria-label="Search loans" /></label>
-  <div class="filter-strip" aria-label="Filter loan status">{#each ['All','Active','Partially repaid','Repaid','Unspecified'] as f}<button class:active={filter===f} onclick={()=>filter=f}>{f}</button>{/each}</div>
-  {#if loading}<div class="loading" aria-label="Loading loans"><span></span><span></span><span></span></div>{:else if error}<p class="notice" role="status">{error}</p>{:else}
-    <section class="section-head"><div><p class="eyebrow">LOAN RECORDS · {visible.length}</p><h2>Loans & repayments</h2></div></section>
-    <section class="records" aria-label="Loan records">{#each visible as row,i}<article class="record"><span class="rank">{String(i+1).padStart(2,'0')}</span><div class="record-main"><strong>{row.name}</strong><small>{row.year}{row.loanId ? ' · '+row.loanId : ''} · {row.rate}%/month · {row.tenure} months</small><small>Principal {money(row.principal)} · Interest {money(row.interest)}</small>{#if row.guarantors.length}<small>Guarantors: {row.guarantors.map(g=>g.name+(g.isCommittee?' ⚠ Committee member': '')).join(', ')}</small>{:else}<small>No guarantors recorded</small>{/if}</div><strong class="record-amount">{money(row.total)}</strong></article>{:else}<p class="empty">No loan records match these filters.</p>{/each}</section>
+  <label class="search full-search"><span aria-hidden="true">⌕</span><input bind:value={query} placeholder={language === 'hi' ? 'ऋणी या उद्देश्य खोजें…' : 'Search borrower or purpose…'} aria-label={language === 'hi' ? 'ऋण खोजें' : 'Search loans'} /></label>
+  <div class="filter-strip" aria-label={language === 'hi' ? 'ऋण स्थिति फ़िल्टर' : 'Filter loan status'}>{#each ['All','Active','Partially repaid','Repaid','Unspecified'] as f}<button class:active={filter===f} onclick={()=>filter=f}>{language === 'hi' ? ({All:'सभी',Active:'चालू','Partially repaid':'आंशिक भुगतान',Repaid:'चुकाया गया',Unspecified:'अनिर्दिष्ट'}[f]) : f}</button>{/each}</div>
+  {#if loading}<div class="loading" aria-label={language === 'hi' ? 'ऋण रिकॉर्ड लोड हो रहे हैं' : 'Loading loans'}><span></span><span></span><span></span></div>{:else if error}<p class="notice" role="status">{error}</p>{:else}
+    <section class="section-head"><div><p class="eyebrow">LOAN RECORDS · {visible.length}</p><h2>{language === 'hi' ? 'ऋण और भुगतान' : 'Loans & repayments'}</h2></div></section>
+    <section class="records" aria-label={language === 'hi' ? 'ऋण रिकॉर्ड' : 'Loan records'}>{#each visible as row,i}<article class="record"><span class="rank">{String(i+1).padStart(2,'0')}</span><div class="record-main"><strong>{row.name}</strong><small>{row.year}{row.loanId ? ' · '+row.loanId : ''} · {row.rate}%/{language === 'hi' ? 'माह' : 'month'} · {row.tenure} {language === 'hi' ? 'महीने' : 'months'}</small><small>{language === 'hi' ? 'मूलधन' : 'Principal'} {money(row.principal)} · {language === 'hi' ? 'ब्याज' : 'Interest'} {money(row.interest)}</small>{#if row.guarantors.length}<small>{language === 'hi' ? 'गारंटर: ' : 'Guarantors: '}{row.guarantors.map(g=>g.name+(g.isCommittee?(language === 'hi' ? ' ⚠ समिति सदस्य' : ' ⚠ Committee member'): '')).join(', ')}</small>{:else}<small>{language === 'hi' ? 'कोई गारंटर दर्ज नहीं है' : 'No guarantors recorded'}</small>{/if}</div><strong class="record-amount">{money(row.total)}</strong></article>{:else}<p class="empty">{language === 'hi' ? 'इन फ़िल्टरों से कोई ऋण रिकॉर्ड नहीं मिला।' : 'No loan records match these filters.'}</p>{/each}</section>
   {/if}
-  <a class="back-link" href="/">← Back to home</a>
+  <a class="back-link" href="/">{language === 'hi' ? '← होम पर वापस' : '← Back to home'}</a>
 </main>
 <BottomNav />
