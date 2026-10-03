@@ -15,6 +15,7 @@
   let lastPath = activePath;
   import { onMount } from 'svelte';
   import { inbox, unreadCount, refreshInbox, markAllRead, clearAll, initInbox } from '$lib/stores/notifications';
+  import NotifyButton from '$lib/components/NotifyButton.svelte';
   $: if (activePath !== lastPath) {
     lastPath = activePath;
     open = false;
@@ -54,7 +55,7 @@
       <div class="menu-grabber"></div>
       <header class="menu-sheet-head"><div><p class="eyebrow">CHHATH PUJA PORTAL</p><h2>{showNotifications ? 'Notifications' : 'Menu'}</h2></div><button class="menu-close" type="button" aria-label="Close menu" onclick={() => {open = false; showNotifications = false;}}>×</button></header>
       {#if showNotifications}
-        <div class="menu-notice"><div class="notification-toolbar"><strong>Inbox · {$inbox.length}</strong><span></span><button class="menu-secondary" disabled={$unreadCount === 0} onclick={markAllRead}>Mark all read ({$unreadCount})</button><button class="menu-secondary" disabled={$inbox.length === 0} onclick={clearAll}>Clear all</button></div>{#if $inbox.length}<div class="notification-list">{#each $inbox as note (note.id)}<article class:notification-unread={!note.read} class="notification-item"><strong>{note.title}</strong>{#if note.body}<p>{note.body}</p>{/if}<small>{new Date(note.receivedAt).toLocaleString()}</small><a href={note.url.startsWith('/') ? note.url : '/'} onclick={() => { open = false; }}>Open ↗</a></article>{/each}</div>{:else}<span class="menu-big-icon">♧</span><strong>No notifications yet</strong><p>Notifications received and saved on this device will appear here.</p>{/if}<button class="menu-secondary" onclick={() => showNotifications = false}>← Back to menu</button></div>
+        <div class="menu-notice"><div class="notification-toolbar"><strong>Inbox · {$inbox.length}</strong><span></span><button class="menu-secondary" disabled={$unreadCount === 0} onclick={markAllRead}>Mark all read ({$unreadCount})</button><button class="menu-secondary" disabled={$inbox.length === 0} onclick={clearAll}>Clear all</button></div>{#if $inbox.length}<div class="notification-list">{#each $inbox as note (note.id)}<article class:notification-unread={!note.read} class="notification-item"><strong>{note.title}</strong>{#if note.body}<p>{note.body}</p>{/if}<small>{new Date(note.receivedAt).toLocaleString()}</small><a href={note.url.startsWith('/') ? note.url : '/'} onclick={() => { open = false; }}>Open ↗</a></article>{/each}</div>{:else}<span class="menu-big-icon">♧</span><strong>No notifications yet</strong><p>Notifications received and saved on this device will appear here.</p>{/if}<div class="push-optin"><NotifyButton /></div><button class="menu-secondary" onclick={() => showNotifications = false}>← Back to menu</button></div>
       {:else}
         <div class="menu-tools">
           <button class="menu-install" type="button" onclick={installApp}><span class="tool-icon">⇩</span><span><strong>Install app</strong><small>Add to your home screen</small></span></button>
