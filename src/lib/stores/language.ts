@@ -11,13 +11,9 @@ export const portalLanguage = derived(lang, ($lang): PortalLanguage => $lang);
 
 export function initPortalLanguage(): void {
   if (!browser) return;
-  try {
-    const legacy = localStorage.getItem('chhath-portal-language');
-    if (legacy === 'hi' || legacy === 'en') lang.set(legacy);
-    document.documentElement.setAttribute('lang', readLanguage());
-  } catch {
-    // Browser storage can be disabled; the in-memory language store still works.
-  }
+  // The canonical store owns the selected language. Do not overwrite it from
+  // the legacy key on each route mount, or navigation can revert live changes.
+  document.documentElement.setAttribute('lang', readLanguage());
 }
 function readLanguage(): PortalLanguage {
   let current: PortalLanguage = 'en';
