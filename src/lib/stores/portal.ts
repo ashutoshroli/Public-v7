@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 
 export type PortalRow = Record<string, unknown>;
 export type PortalData = Record<string, PortalRow[] | unknown> & {
@@ -58,9 +58,7 @@ function writeCache(data: PortalData) {
 }
 
 export async function loadPortalData(force = false): Promise<PortalData> {
-  if (!force && loadedAt && Date.now() - loadedAt < 60_000) return new Promise(resolve => {
-    const unsubscribe = portalData.subscribe(value => { unsubscribe(); resolve(value); });
-  });
+  if (!force && loadedAt && Date.now() - loadedAt < 60_000) return get(portalData);
   if (inFlight) return inFlight;
 
   portalLoading.set(true);
