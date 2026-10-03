@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
   import BottomNav from '$lib/components/BottomNav.svelte';
   type Row = Record<string, unknown>;
   type PortalData = { loans?: Row[]; users?: Row[]; guarantors?: Row[]; collections?: Row[]; committee?: Row[] };
@@ -53,13 +54,13 @@
   });
   $: totalLoan = visible.reduce((sum,r)=>sum+r.principal,0);
   $: totalWithInterest = visible.reduce((sum,r)=>sum+r.total,0);
-  onMount(async () => {
-    try { const res = await fetch(API); if (!res.ok) throw new Error('Public records are temporarily unavailable.');
-      const raw = await res.json(); data = raw.data && typeof raw.data === 'object' ? raw.data : raw;
-    } catch(e) { error = e instanceof Error ? e.message : 'Unable to load loan records.'; }
-    finally { loading = false; }
-  });
-</script>
+  const unsubscribeData = portalData.subscribe((value) => { data = value as PortalData; });
+  const unsubscribeLoading = portalLoading.subscribe((value) => { loading = value; });
+  const unsubscribeError = portalError.subscribe((value) => { error = value; });
+  onMount(() => {
+    void loadPortalData().catch(() => {});
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
+  });</script>
 <svelte:head><title>Loans — Chhath Puja</title><meta name="description" content="Browse public loan and repayment records for Shaharpura Chhath Puja." /></svelte:head>
 <header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><span class="language">EN / हिंदी</span><label class="year-picker"><span class="sr-only">Select year</span><select bind:value={selectedYear} aria-label="Select year">{#each years as y}<option value={y}>{y}</option>{/each}</select></label></div></header>
 <main class="page">
