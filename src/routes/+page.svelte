@@ -15,7 +15,8 @@
   let query = '';
   let hasLoaded = false;
 
-  const value = (row: Row, ...keys: string[]) => {
+  const value = (row: Row | undefined, ...keys: string[]) => {
+    if (!row) return '';
     for (const key of keys) {
       if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]).trim();
       const norm = key.trim().toLowerCase().replace(/\s+/g,' ');

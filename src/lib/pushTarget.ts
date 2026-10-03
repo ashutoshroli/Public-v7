@@ -40,7 +40,7 @@
  * @param {string} origin
  * @returns {string}
  */
-function sameOriginPath(raw, origin) {
+function sameOriginPath(raw: unknown, origin: string): string {
   // The payload contract says `url` is a string. Coercing anything else would turn a malformed
   // payload into a real-looking path — String(42) resolves to '/42', which is same-origin and so
   // technically safe, but it is not a page and pretending otherwise hides the malformed payload.

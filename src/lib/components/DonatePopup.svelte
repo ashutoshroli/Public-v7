@@ -15,7 +15,7 @@
 <svelte:window onkeydown={onKey}/>
 {#if open}
 <div class="donate-backdrop" role="presentation" onclick={e=>{if(e.target===e.currentTarget)open=false;}}>
-<section class="donate-modal" role="dialog" aria-modal="true" aria-labelledby="donate-popup-title">
+<div class="donate-modal" role="dialog" aria-modal="true" aria-labelledby="donate-popup-title" tabindex="-1">
 <header><div><p>COMMUNITY SUPPORT</p><h2 id="donate-popup-title">Donate Now</h2></div><button aria-label="Close donation popup" onclick={()=>open=false}>×</button></header>
 <p>Your contribution supports Chhath Puja arrangements and community service.</p>
 {#if upi}<div class="upi"><small>UPI ID</small><strong>{upi}</strong><button onclick={()=>{if(typeof navigator!=='undefined')void navigator.clipboard?.writeText(upi);}}>Copy UPI</button></div>{/if}
