@@ -47,7 +47,7 @@
   }, 0);
   $: budget = collectionTotal + returnedLoans;
   $: utilization = budget > 0 ? Math.min(100, expenseTotal / budget * 100) : 0;
-  $: filteredContributors = [...contributors.values()].filter(c => c.name.toLowerCase().includes(query.toLowerCase())).sort((a,b) => b.amount-a.amount);
+  $: filteredContributors = [...contributors.values()].sort((a,b) => b.amount-a.amount);
 
   async function loadData() {
     loading = true;
@@ -117,42 +117,10 @@
       <article class="metric"><span class="metric-label">Loan Returned (with Int.)</span><strong>{money(returnedLoans)}</strong><span class="metric-note">Estimated principal + interest</span></article>
     </section>
     <div class="stat-row">
-      <div class="stat-tile"><small>Contributors</small><strong>{filteredContributors.length}</strong></div>
-      <div class="stat-tile"><small>Expense records</small><strong>{expenses.length}</strong></div>
-      <div class="stat-tile"><small>Years</small><strong>{availableYears.length || 10}</strong></div>
+      <a class="stat-tile" href="/contributors/"><small>Contributors ↗</small><strong>{filteredContributors.length}</strong><small>View full list</small></a>
+      <a class="stat-tile" href="/expenses/"><small>Expense records ↗</small><strong>{expenses.length}</strong><small>View all expenses</small></a>
+      <div class="stat-tile"><small>Years</small><strong>{availableYears.length || 10}</strong><small>Of community service</small></div>
     </div>
-
-    <section class="section-head" id="contributors">
-      <div><p class="eyebrow">COMMUNITY · {filteredContributors.length} NAMES</p><h2>Recent Contributors</h2></div>
-      <label class="search"><span aria-hidden="true">⌕</span><input bind:value={query} placeholder="Search name…" aria-label="Search contributors" /></label>
-    </section>
-    <section class="records" aria-label="Contributor list">
-      {#each filteredContributors.slice(0, 8) as contributor, i}
-        <article class="record">
-          <span class="rank">{String(i+1).padStart(2,'0')}</span>
-          <div class="record-main"><strong>{contributor.name}</strong><small>{contributor.type || 'Community contribution'}</small></div>
-          <strong class="record-amount">{money(contributor.amount)}</strong>
-        </article>
-      {:else}
-        <p class="empty">No contributors match this search.</p>
-      {/each}
-    </section>
-
-    <section class="section-head" id="expenses">
-      <div><p class="eyebrow">OUTGOING · {expenses.length} RECORDS</p><h2>Expenses</h2></div>
-      <span class="section-total">{money(expenseTotal)}</span>
-    </section>
-    <section class="records" aria-label="Expense records">
-      {#each expenses.slice(0, 8) as item, i}
-        <article class="record">
-          <span class="rank">{String(i+1).padStart(2,'0')}</span>
-          <div class="record-main"><strong>{value(item, 'Description', 'Discription', 'description', 'Name') || 'Expense record'}</strong><small>{value(item, 'Category', 'category') || yearOf(item) || selectedYear}</small></div>
-          <strong class="record-amount">{money(amount(value(item, 'Amount', 'amount')))}</strong>
-        </article>
-      {:else}
-        <p class="empty">No expense records available for this year.</p>
-      {/each}
-    </section>
   {/if}
 
   <section class="journey" id="journey">
@@ -160,8 +128,8 @@
     <a href="/decade/">Explore journey <span aria-hidden="true">↗</span></a>
   </section>
   <nav class="quick-links" aria-label="Portal sections">
-    <a href="#contributors">Contributors <span>↗</span></a>
-    <a href="#expenses">Expenses <span>↗</span></a>
+    <a href="/contributors/">Contributors <span>↗</span></a>
+    <a href="/expenses/">Expenses <span>↗</span></a>
     <a href="/decade/">Our Journey <span>↗</span></a>
     <a href="/downloads/">Downloads <span>↗</span></a>
   </nav>
@@ -169,8 +137,8 @@
 </main>
 <nav class="bottom-nav" aria-label="Main navigation">
   <a class="active" href="/" aria-current="page"><span class="nav-icon">⌂</span><span>Home</span></a>
-  <a href="/#contributors"><span class="nav-icon">♙</span><span>Contributors</span></a>
-  <a href="/#expenses"><span class="nav-icon">▤</span><span>Expenses</span></a>
+  <a href="/contributors/"><span class="nav-icon">♙</span><span>Contributors</span></a>
+  <a href="/expenses/"><span class="nav-icon">▤</span><span>Expenses</span></a>
   <a href="/decade/"><span class="nav-icon">◷</span><span>Journey</span></a>
   <a href="/downloads/"><span class="nav-icon">☰</span><span>Menu</span></a>
 </nav>
