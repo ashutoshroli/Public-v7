@@ -1,6 +1,6 @@
 <script lang="ts">
   import BottomNav from "$lib/components/BottomNav.svelte";
-  import DonatePopup from "$lib/components/DonatePopup.svelte";
+  import { portalLanguage, togglePortalLanguage, initPortalLanguage } from '$lib/stores/language';
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
 
@@ -14,6 +14,8 @@
   let yearInitialized = false;
   let query = '';
   let hasLoaded = false;
+  let language: 'en' | 'hi' = 'en';
+  const unsubscribeLanguage = portalLanguage.subscribe(value => { language = value; });
 
   const value = (row: Row, ...keys: string[]) => {
     for (const key of keys) {
@@ -76,8 +78,9 @@
   onMount(() => {
     const record = new URLSearchParams(window.location.search).get('record');
     if (record) { window.location.replace('/verify/?record=' + encodeURIComponent(record)); return; }
+    initPortalLanguage();
     void loadData();
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); unsubscribeLanguage(); };
   });
 </script>
 
@@ -93,7 +96,7 @@
     <span><strong>Chhath Puja</strong><small>Transparency Portal</small></span>
   </a>
   <div class="header-actions">
-    <span class="language" aria-label="Language options not available yet">EN / हिंदी</span>
+    <button class="language" type="button" onclick={togglePortalLanguage} aria-label="Switch language">{language === 'en' ? 'EN / हिंदी' : 'हिंदी / EN'}</button>
     <label class="year-picker"><span class="sr-only">Select year</span>
       <select bind:value={selectedYear} aria-label="Select year">
         {#each years as y}<option value={y}>{y}</option>{/each}
@@ -108,8 +111,8 @@
     <div class="hero-image" role="img" aria-label="Sunrise over a river, representing Chhath Puja">
       <div><p>आस्था • सहयोग • पारदर्शिता</p><h2>छठ पूजा</h2><p>आस्था · सहयोग · पारदर्शिता</p></div>
     </div>
-    <h1>Faith deserves<br /><span>transparency.</span></h1>
-    <p class="lede">छठ पूजा पारदर्शिता पोर्टल — नवयुवक छठ पूजा समिति</p>
+    <h1>{language === 'hi' ? 'पारदर्शिता' : 'Faith deserves'}<br /><span>{language === 'hi' ? 'हर विश्वास का अधिकार।' : 'transparency.'}</span></h1>
+    <p class="lede">{language === 'hi' ? 'नवयुवक छठ पूजा समिति — सार्वजनिक पारदर्शिता पोर्टल' : 'छठ पूजा पारदर्शिता पोर्टल — नवयुवक छठ पूजा समिति'}</p>
   </section>
 
   {#if error}<div class="notice" role="status">{error} <button onclick={loadData} disabled={loading}>Retry</button></div>{/if}
@@ -138,7 +141,7 @@
     <div><p class="eyebrow">2017 — 2026</p><h2>A decade of community service.</h2><p>See how our Chhath Puja journey has grown through the years.</p></div>
     <a href="/decade/">Explore journey <span aria-hidden="true">↗</span></a>
   </section>
-  <div class="donate-popup-entry"><DonatePopup /></div>
+
   <nav class="quick-links" aria-label="Portal sections">
     <a href="/contributors/">Contributors <span>↗</span></a>
     <a href="/expenses/">Expenses <span>↗</span></a>
