@@ -16,6 +16,14 @@
     }
     return '';
   };
+  const safePublicUrl = (raw: string) => {
+    try {
+      const url = new URL(raw);
+      return url.protocol === 'https:' ? url.href : '';
+    } catch {
+      return '';
+    }
+  };
   const resell = (r: Row) => ['true','1','yes'].includes(value(r,'Is Resell').toLowerCase());
   $: users = data.users || [];
   $: userMap = new Map(users.map(u => [value(u,'ID'),u]).filter(([id]) => !!id) as [string,Row][]);
@@ -35,7 +43,7 @@
       const rowIndex = value(r,'__rowIndex') || String(i);
       const recordId = docType+'-'+year+'-'+rowIndex;
       const file = generated.find(g=>value(g,'doc_type')===docType && value(g,'year')===year && value(g,'record_id')===recordId);
-      const link = value(file,'public_link');
+      const link = safePublicUrl(value(file,'public_link'));
       return link ? [{name,year,type:docType,recordId,link,kind:'Receipt / contribution'}] : [];
     }),
     ...consents.flatMap(r => {
