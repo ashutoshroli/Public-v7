@@ -23,7 +23,7 @@
     return an.localeCompare(bn);
   }) : [];
   $: person = (source.users || []).find(u => value(u as Record<string,unknown>, 'ID') === selectedPerson);
-  $: groups: DownloadGroup[] = selectedPerson ? downloadsForPerson(source, selectedPerson) : [];
+  $: groups = selectedPerson ? downloadsForPerson(source, selectedPerson) : [];
   $: allDocs = groups.flatMap(g => g.docs.map(d => ({...d, titleKey:g.titleKey})));
   $: availableDocs = allDocs.filter(d => !!d.publicLink);
   $: unavailableDocs = allDocs.filter(d => !d.publicLink);
