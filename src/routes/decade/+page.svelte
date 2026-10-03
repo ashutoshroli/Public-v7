@@ -1,5 +1,8 @@
 <script lang="ts">
   import BottomNav from "$lib/components/BottomNav.svelte";
+  import { portalLanguage, togglePortalLanguage, initPortalLanguage } from "$lib/stores/language";
+  let language: "en" | "hi" = "en";
+  const unsubLang = portalLanguage.subscribe(v => language = v);
   import { onMount } from 'svelte';
   import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
 
@@ -48,8 +51,9 @@
   const unsubscribeError = portalError.subscribe(value => { error = value; });
   const unsubscribeYear = selectedPortalYear.subscribe(value => { const year = Number(value); if (Number.isFinite(year) && years.includes(year)) { active = year; updateCount(year); } });
   onMount(() => {
+    initPortalLanguage();
     void loadPortalData().catch(() => {});
-    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); unsubLang(); };
   });
 
   function selectYear(year: number) {
@@ -57,13 +61,14 @@
     selectedPortalYear.set(String(year));
     updateCount(year);
   }
+initPortalLanguage();
 </script>
 
 <svelte:head>
   <title>Our Journey — Chhath Puja</title>
   <meta name="description" content="Explore the Shaharpura Chhath Puja community's journey by year." />
 </svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
+<header class="topbar"><a class="brand" href="/"><span class="sun" aria-hidden="true">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === "hi" ? "English" : "हिंदी"}</button><a class="language" href="/">{language === "hi" ? "← होम" : "← Home"}</a></div></header>
 <main class="page journey-page">
   <p class="eyebrow">OUR JOURNEY / 2017—2026</p>
   <h1>A decade of<br /><span>showing up.</span></h1>
