@@ -1,7 +1,7 @@
 <script lang="ts">
   import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
-  import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
+  import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[]; users?: Row[] };
   const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
@@ -9,6 +9,7 @@
   let loading = true;
   let error = '';
   let selectedYear = String(new Date().getFullYear());
+  let yearInitialized = false;
   let query = '';
   let filter = 'All';
   const value = (row: Row | undefined, ...keys: string[]) => {
@@ -33,6 +34,8 @@
   const isResell = (r: Row) => ['true','1','yes'].includes(value(r,'Is Resell','Is Resell ').toLowerCase());
   $: yearsAvailable = [...new Set((data.collections || []).map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
   $: if (yearsAvailable.length && !yearsAvailable.includes(selectedYear)) selectedYear = yearsAvailable[0];
+  $: if (yearsAvailable.length && !yearInitialized) { selectedYear = yearsAvailable[0]; yearInitialized = true; }
+  $: if (yearInitialized && selectedYear) selectedPortalYear.set(selectedYear);
   $: years = yearsAvailable.length ? yearsAvailable : [selectedYear];
   $: userMap = new Map((data.users || []).map(u => [value(u,'ID'), u]).filter(([id]) => !!id) as [string, Row][]);
   $: contributorMap = (data.collections || []).filter(row => !isResell(row) && yearOf(row) === selectedYear).reduce((map, row) => {
