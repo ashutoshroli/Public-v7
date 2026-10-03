@@ -5,37 +5,49 @@
 
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[]; expenses?: Row[]; loans?: Row[]; committee?: Row[]; users?: Row[] };
-  const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
   let data: PortalData = {};
   let years = Array.from({ length: 10 }, (_, i) => 2017 + i);
   let active = 2017;
-  let counts = 0;\n  let cashTotal = 0;\n  let peopleCount = 0;
+  let counts = 0;
+  let cashTotal = 0;
+  let peopleCount = 0;
   let loading = true;
   let error = '';
 
-  const yearOf = (row: Row) => String(row.Year ?? row.year ?? '');
+  const value = (row: Row, ...keys: string[]) => {
+    for (const key of keys) {
+      if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]).trim();
+      const norm = key.trim().toLowerCase().replace(/\s+/g,' ');
+      const actual = Object.keys(row).find(k => k.trim().toLowerCase().replace(/\s+/g,' ') === norm);
+      if (actual && row[actual] !== undefined && row[actual] !== null && String(row[actual]).trim()) return String(row[actual]).trim();
+    }
+    return '';
+  };
+  const yearOf = (row: Row) => value(row,'Year','year');
+  const amountOf = (v: unknown) => { const n = Number(String(v ?? '').replace(/[^0-9.-]/g,'')); return Number.isFinite(n) ? n : 0; };
+  const isResell = (row: Row) => ['true','1','yes'].includes(value(row,'Is Resell').toLowerCase());
   function updateCount(year: number) {
-    counts = (data.collections || []).filter(row => yearOf(row) === String(year)).length;
+    const rows = (data.collections || []).filter(row => yearOf(row) === String(year) && !isResell(row));
+    counts = rows.length;
+    cashTotal = rows.reduce((sum,row) => sum + (['2','3'].includes(value(row,'Contribution Type')) ? 0 : amountOf(value(row,'Amount'))),0);
+    peopleCount = new Set(rows.map(row => value(row,'ID','Name')).filter(Boolean)).size;
   }
 
-  onMount(async () => {
-    try {
-      const response = await fetch(API);
-      if (!response.ok) throw new Error('Journey records are temporarily unavailable.');
-      const raw = await response.json();
-      data = raw.data && typeof raw.data === 'object' ? raw.data : raw;
-      const all = [...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])];
-      const seen = [...new Set(all.map(yearOf).filter(year => /^20\d{2}$/.test(year)))].map(Number).sort((a, b) => a - b);
-      if (seen.length) {
-        years = [...new Set([...seen, 2026])].sort((a, b) => a - b);
-        if (!years.includes(active)) active = years[0];
-      }
-      updateCount(active);
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'Unable to load journey records.';
-    } finally {
-      loading = false;
+  const unsubscribeData = portalData.subscribe(value => {
+    data = value as PortalData;
+    const all = [...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])];
+    const seen = [...new Set(all.map(yearOf).filter(year => /^20\d{2}$/.test(year)))].map(Number).sort((a,b)=>a-b);
+    if (seen.length) {
+      years = [...new Set([...seen,2026])].sort((a,b)=>a-b);
+      if (!years.includes(active)) active = years[0];
     }
+    updateCount(active);
+  });
+  const unsubscribeLoading = portalLoading.subscribe(value => { loading = value; });
+  const unsubscribeError = portalError.subscribe(value => { error = value; });
+  onMount(() => {
+    void loadPortalData().catch(() => {});
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
   });
 
   function selectYear(year: number) {
