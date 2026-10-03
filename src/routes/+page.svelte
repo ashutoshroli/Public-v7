@@ -85,7 +85,7 @@
 </script>
 
 <svelte:head>
-  <title>Chhath Puja — Transparency Portal</title>
+  <title>{language === 'hi' ? 'छठ पूजा — पारदर्शिता पोर्टल' : 'Chhath Puja — Transparency Portal'}</title>
   <meta name="description" content="Public contribution and expense records for the Shaharpura Chhath Puja committee." />
   <meta name="theme-color" content="#f8f8f5" />
 </svelte:head>
@@ -93,10 +93,10 @@
 <header class="topbar">
   <a class="brand" href="/" aria-label="Chhath Puja home">
     <span class="sun" aria-hidden="true">☼</span>
-    <span><strong>Chhath Puja</strong><small>Transparency Portal</small></span>
+    <span><strong>Chhath Puja</strong><small>{language === 'hi' ? 'पारदर्शिता पोर्टल' : 'Transparency Portal'}</small></span>
   </a>
   <div class="header-actions">
-    <button class="language" type="button" onclick={togglePortalLanguage} aria-label="Switch language">{language === 'en' ? 'EN / हिंदी' : 'हिंदी / EN'}</button>
+    <button class="language" type="button" onclick={togglePortalLanguage} aria-label={language === 'hi' ? 'भाषा बदलें' : 'Switch language'}>{language === 'en' ? 'EN / हिंदी' : 'हिंदी / EN'}</button>
     <label class="year-picker"><span class="sr-only">Select year</span>
       <select bind:value={selectedYear} aria-label="Select year">
         {#each years as y}<option value={y}>{y}</option>{/each}
@@ -107,7 +107,7 @@
 
 <main class="page">
   <section class="intro">
-    <p class="eyebrow"><span class="live-dot"></span> PUBLIC LEDGER <span class="separator">/</span> SHAHARPURA</p>
+    <p class="eyebrow"><span class="live-dot"></span> {language === 'hi' ? 'सार्वजनिक लेखा' : 'PUBLIC LEDGER'} <span class="separator">/</span> {language === 'hi' ? 'शहरपुरा' : 'SHAHARPURA'}</p>
     <div class="hero-image" role="img" aria-label="Sunrise over a river, representing Chhath Puja">
       <div><p>आस्था • सहयोग • पारदर्शिता</p><h2>छठ पूजा</h2><p>आस्था · सहयोग · पारदर्शिता</p></div>
     </div>
@@ -115,38 +115,38 @@
     <p class="lede">{language === 'hi' ? 'नवयुवक छठ पूजा समिति — सार्वजनिक पारदर्शिता पोर्टल' : 'छठ पूजा पारदर्शिता पोर्टल — नवयुवक छठ पूजा समिति'}</p>
   </section>
 
-  {#if error}<div class="notice" role="status">{error} <button onclick={loadData} disabled={loading}>Retry</button></div>{/if}
+  {#if error}<div class="notice" role="status">{error} <button onclick={loadData} disabled={loading}>{language === 'hi' ? 'फिर प्रयास करें' : 'Retry'}</button></div>{/if}
   {#if loading}
     <div class="loading" aria-label="Loading public records"><span></span><span></span><span></span></div>
   {:else if hasLoaded}
     <section class="summary" aria-label="Financial summary">
       <article class="budget-card">
-        <p class="eyebrow">TOTAL BUDGET · {selectedYear}</p>
+        <p class="eyebrow">{language === 'hi' ? 'कुल बजट' : 'TOTAL BUDGET'} · {selectedYear}</p>
         <strong>{money(budget)}</strong>
         <div class="progress-track"><span style:width="{utilization}%"></span></div>
-        <div class="budget-foot"><span>{utilization.toFixed(1)}% utilized</span><span>{money(budget-expenseTotal)} still available</span></div>
+        <div class="budget-foot"><span>{utilization.toFixed(1)}% {language === 'hi' ? 'उपयोग हुआ' : 'utilized'}</span><span>{money(budget-expenseTotal)} {language === 'hi' ? 'शेष उपलब्ध' : 'still available'}</span></div>
       </article>
-      <article class="metric"><span class="metric-label">Collected</span><strong>{money(collectionTotal)}</strong><span class="metric-note">Public contributions</span></article>
-      <article class="metric"><span class="metric-label">Expenses</span><strong>{money(expenseTotal)}</strong><span class="metric-note">Recorded spending</span></article>
-      <article class="metric"><span class="metric-label">Loan Returned (with Int.)</span><strong>{money(returnedLoans)}</strong><span class="metric-note">Estimated principal + interest</span></article>
+      <article class="metric"><span class="metric-label">{language === 'hi' ? 'कुल संग्रह' : 'Collected'}</span><strong>{money(collectionTotal)}</strong><span class="metric-note">{language === 'hi' ? 'सार्वजनिक योगदान' : 'Public contributions'}</span></article>
+      <article class="metric"><span class="metric-label">{language === 'hi' ? 'खर्च' : 'Expenses'}</span><strong>{money(expenseTotal)}</strong><span class="metric-note">{language === 'hi' ? 'दर्ज खर्च' : 'Recorded spending'}</span></article>
+      <article class="metric"><span class="metric-label">{language === 'hi' ? 'ब्याज सहित लौटाया ऋण' : 'Loan Returned (with Int.)'}</span><strong>{money(returnedLoans)}</strong><span class="metric-note">{language === 'hi' ? 'अनुमानित मूलधन + ब्याज' : 'Estimated principal + interest'}</span></article>
     </section>
     <div class="stat-row">
-      <a class="stat-tile" href="/contributors/"><small>Contributors ↗</small><strong>{filteredContributors.length}</strong><small>View full list</small></a>
-      <a class="stat-tile" href="/expenses/"><small>Expense records ↗</small><strong>{expenses.length}</strong><small>View all expenses</small></a>
-      <div class="stat-tile"><small>Years</small><strong>{availableYears.length || 10}</strong><small>Of community service</small></div>
+      <a class="stat-tile" href="/contributors/"><small>{language === 'hi' ? 'योगदानकर्ता ↗' : 'Contributors ↗'}</small><strong>{filteredContributors.length}</strong><small>{language === 'hi' ? 'पूरी सूची देखें' : 'View full list'}</small></a>
+      <a class="stat-tile" href="/expenses/"><small>{language === 'hi' ? 'खर्च रिकॉर्ड ↗' : 'Expense records ↗'}</small><strong>{expenses.length}</strong><small>{language === 'hi' ? 'सभी खर्च देखें' : 'View all expenses'}</small></a>
+      <div class="stat-tile"><small>{language === 'hi' ? 'वर्ष' : 'Years'}</small><strong>{availableYears.length || 10}</strong><small>{language === 'hi' ? 'सामुदायिक सेवा के' : 'Of community service'}</small></div>
     </div>
   {/if}
 
   <section class="journey" id="journey">
-    <div><p class="eyebrow">2017 — 2026</p><h2>A decade of community service.</h2><p>See how our Chhath Puja journey has grown through the years.</p></div>
-    <a href="/decade/">Explore journey <span aria-hidden="true">↗</span></a>
+    <div><p class="eyebrow">2017 — 2026</p><h2>{language === 'hi' ? 'सामुदायिक सेवा का एक दशक।' : 'A decade of community service.'}</h2><p>{language === 'hi' ? 'देखें कि वर्षों में छठ पूजा की हमारी यात्रा कैसे आगे बढ़ी।' : 'See how our Chhath Puja journey has grown through the years.'}</p></div>
+    <a href="/decade/">{language === 'hi' ? 'यात्रा देखें' : 'Explore journey'} <span aria-hidden="true">↗</span></a>
   </section>
 
   <nav class="quick-links" aria-label="Portal sections">
-    <a href="/contributors/">Contributors <span>↗</span></a>
-    <a href="/expenses/">Expenses <span>↗</span></a>
-    <a href="/decade/">Our Journey <span>↗</span></a>
-    <a href="/downloads/">Downloads <span>↗</span></a>
+    <a href="/contributors/" >{language === 'hi' ? 'योगदानकर्ता' : 'Contributors'} <span>↗</span></a>
+    <a href="/expenses/" >{language === 'hi' ? 'खर्च' : 'Expenses'} <span>↗</span></a>
+    <a href="/decade/" >{language === 'hi' ? 'हमारी यात्रा' : 'Our Journey'} <span>↗</span></a>
+    <a href="/downloads/" >{language === 'hi' ? 'डाउनलोड' : 'Downloads'} <span>↗</span></a>
   </nav>
   <footer><span>CHHATH PUJA / TRANSPARENCY</span><span>Faith · Unity · Accountability</span></footer>
 </main>
