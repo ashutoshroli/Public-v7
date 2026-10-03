@@ -6,7 +6,7 @@
   import type { PortalData } from '$lib/api/schema';
   import BottomNav from '$lib/components/BottomNav.svelte';
   let data: PortalData;
-  let loading = true, error = '', selectedVillage = '', selectedPerson = '';
+  let loading = true, error = '', selectedVillage = '', selectedPerson = '', nameQuery = '';
   const text = (en: string, hi: string) => $lang === 'hi' ? hi : en;
   const value = (r: Record<string, unknown> | undefined, key: string, fallback = '') => {
     if (!r) return fallback;
@@ -17,7 +17,7 @@
   $: villageOptions = [...new Set((source.users || []).map(u => value(u as Record<string,unknown>, $lang === 'hi' ? 'Village (Hindi)' : 'Village', value(u as Record<string,unknown>, 'Village'))).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   $: villageRecord = (source.users || []).find(u => value(u as Record<string,unknown>, 'Village') === selectedVillage || value(u as Record<string,unknown>, 'Village (Hindi)') === selectedVillage);
   $: canonicalVillage = villageRecord ? value(villageRecord as Record<string,unknown>, 'Village', selectedVillage) : selectedVillage;
-  $: people = selectedVillage ? peopleInVillage(source, canonicalVillage, '', 1000).sort((a,b) => {
+  $: people = selectedVillage && nameQuery.trim() ? peopleInVillage(source, canonicalVillage, nameQuery.trim(), 1000).sort((a,b) => {
     const an = $lang === 'hi' ? value(a as Record<string,unknown>, 'Name (Hindi)', value(a as Record<string,unknown>, 'Name')) : value(a as Record<string,unknown>, 'Name', value(a as Record<string,unknown>, 'Name (Hindi)'));
     const bn = $lang === 'hi' ? value(b as Record<string,unknown>, 'Name (Hindi)', value(b as Record<string,unknown>, 'Name')) : value(b as Record<string,unknown>, 'Name', value(b as Record<string,unknown>, 'Name (Hindi)'));
     return an.localeCompare(bn);
@@ -45,17 +45,23 @@
   {:else}
     <section class="picker-card">
       <label class="field-label" for="village-select">{text('1. Select village','1. गाँव चुनें')}</label>
-      <select id="village-select" class="full-select" bind:value={selectedVillage} onchange={() => selectedPerson = ''}>
+      <select id="village-select" class="full-select" bind:value={selectedVillage} onchange={() => { selectedPerson = ''; nameQuery = ''; }}>
         <option value="">{text('-- Select village --','-- गाँव चुनें --')}</option>
         {#each villageOptions as village}<option value={village}>{village}</option>{/each}
       </select>
-      <label class="field-label" for="person-select">{text('2. Select name','2. नाम चुनें')}</label>
-      <select id="person-select" class="full-select" bind:value={selectedPerson} disabled={!selectedVillage}>
-        <option value="">{selectedVillage ? text('-- Select name --','-- नाम चुनें --') : text('Select a village first','पहले गाँव चुनें')}</option>
-        {#each people as p}
-          <option value={value(p as Record<string,unknown>, 'ID')}>{$lang === 'hi' ? value(p as Record<string,unknown>, 'Name (Hindi)', value(p as Record<string,unknown>, 'Name')) : value(p as Record<string,unknown>, 'Name', value(p as Record<string,unknown>, 'Name (Hindi)'))}</option>
-        {/each}
-      </select>
+      <label class="field-label" for="person-search">{text('2. Search name','2. नाम खोजें')}</label>
+      <input id="person-search" class="full-select" type="search" placeholder={text('Type a name to search…','नाम खोजने के लिए टाइप करें…')} bind:value={nameQuery} disabled={!selectedVillage} oninput={() => selectedPerson = ''} autocomplete="off" />
+      {#if selectedVillage && nameQuery.trim()}
+        <div class="search-results" role="listbox" aria-label={text('Matching people','मिलते-जुलते नाम')}>
+          {#each people as p}
+            <button type="button" class="person-option" onclick={() => { selectedPerson = value(p as Record<string,unknown>, 'ID'); nameQuery = $lang === 'hi' ? value(p as Record<string,unknown>, 'Name (Hindi)', value(p as Record<string,unknown>, 'Name')) : value(p as Record<string,unknown>, 'Name', value(p as Record<string,unknown>, 'Name (Hindi'))); }}>
+              <span>{ $lang === 'hi' ? value(p as Record<string,unknown>, 'Name (Hindi)', value(p as Record<string,unknown>, 'Name')) : value(p as Record<string,unknown>, 'Name', value(p as Record<string,unknown>, 'Name (Hindi'))) }</span><span aria-hidden="true">›</span>
+            </button>
+          {:else}
+            <p class="empty">{text('No matching names found.','कोई मिलता-जुलता नाम नहीं मिला।')}</p>
+          {/each}
+        </div>
+      {/if}
       {#if selectedPerson && person}<p class="selected-person">{text('Selected person:','चयनित व्यक्ति:')} <strong>{$lang === 'hi' ? value(person as Record<string,unknown>, 'Name (Hindi)', value(person as Record<string,unknown>, 'Name')) : value(person as Record<string,unknown>, 'Name', value(person as Record<string,unknown>, 'Name (Hindi)'))}</strong></p>{/if}
     </section>
     {#if selectedPerson}
@@ -82,7 +88,7 @@
   .field-label{font-size:.85rem;font-weight:700;margin-top:.25rem}
   .full-select{width:100%;min-height:46px;padding:.7rem .8rem;border:1px solid var(--border,#d1d5db);border-radius:.7rem;background:var(--card,#fff);color:var(--text,#1f2937);font:inherit}
   .full-select:disabled{opacity:.65}
-  .selected-person{margin:.4rem 0 0;font-size:.9rem;color:var(--muted,#68736e)}
+  .search-results{display:grid;gap:.25rem;max-height:18rem;overflow:auto;margin-top:.25rem}\n  .person-option{display:flex;align-items:center;justify-content:space-between;gap:1rem;width:100%;padding:.75rem;border:1px solid var(--border,#e5e7eb);border-radius:.65rem;background:var(--card,#fff);color:var(--text,#1f2937);text-align:left;font:inherit}\n  .person-option:active{transform:scale(.99)}\n  .selected-person{margin:.4rem 0 0;font-size:.9rem;color:var(--muted,#68736e)}
   .unavailable-head{margin-top:1.5rem}
   .unavailable-record{opacity:.82}
   .status-muted{font-size:.8rem;font-weight:700;color:var(--muted,#68736e);white-space:nowrap}
