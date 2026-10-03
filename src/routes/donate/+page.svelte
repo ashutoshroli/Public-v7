@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { portalLanguage, togglePortalLanguage, initPortalLanguage } from '$lib/stores/language';
+  let language: 'en' | 'hi' = 'en';
+  const unsubLang = portalLanguage.subscribe(v => language = v);
   import { onMount } from 'svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
   import { loadPortalData, portalData, portalLoading, portalError } from '$lib/stores/portal';
@@ -11,15 +14,15 @@
   $: userMap=new Map((data.users||[]).map(u=>[value(u,'ID'),u]).filter(([id])=>!!id) as [string,Row][]);
   $: years=[...new Set((data.committee||[]).map(r=>value(r,'Year')).filter(y=>/^20\d{2}$/.test(y)))].sort((a,b)=>Number(b)-Number(a));
   $: liveYear=years.includes(String(new Date().getFullYear()))?String(new Date().getFullYear()):years[0];
-  $: members=(data.committee||[]).filter(r=>value(r,'Year')===liveYear).map(r=>{const id=value(r,'ID','Name'),u=userMap.get(id);return {id,name:value(u,'Name','Name (Hindi)')||value(r,'Name')||id,village:value(u,'Village','Village (Hindi)'),mobile:value(u,'Mobile'),role:value(r,'View Role','Role')||value(u,'Designation')}}).filter(m=>m.name);
+  $: members=(data.committee||[]).filter(r=>value(r,'Year')===liveYear).map(r=>{const id=value(r,'ID','Name'),u=userMap.get(id);return {id,name:language === 'hi' ? (value(u,'Name (Hindi)','Name')||value(r,'Name (Hindi)','Name')||id) : (value(u,'Name')||value(r,'Name')||id),village:language === 'hi' ? value(u,'Village (Hindi)','Village') : value(u,'Village','Village (Hindi)'),mobile:value(u,'Mobile'),role:value(r,'View Role','Role')||value(u,'Designation')}}).filter(m=>m.name);
   $: hasAny=Object.values(details).some(Boolean)||members.length>0;
   const unsubData=portalData.subscribe(v=>data=v as Data);
   const unsubLoad=portalLoading.subscribe(v=>loading=v);
   const unsubError=portalError.subscribe(v=>error=v);
-  onMount(()=>{void loadPortalData().catch(()=>{});return()=>{unsubData();unsubLoad();unsubError();};});
+  onMount(()=>{initPortalLanguage();void loadPortalData().catch(()=>{});return()=>{unsubData();unsubLoad();unsubError();unsubLang();};});
 </script>
 <svelte:head><title>Donate Now — Chhath Puja</title><meta name="description" content="Support Navyuvak Chhath Puja Samiti, Shaharpura, Gardih."/></svelte:head>
-<header class="topbar"><a class="brand" href="/"><span class="sun">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><a class="language" href="/">← Home</a></header>
+<header class="topbar"><a class="brand" href="/"><span class="sun">☼</span><span><strong>Chhath Puja</strong><small>Transparency Portal</small></span></a><div class="header-actions"><button class="language" type="button" onclick={togglePortalLanguage}>{language === 'hi' ? 'English' : 'हिंदी'}</button><a class="language" href="/">{language === 'hi' ? '← होम' : '← Home'}</a></div></header>
 <main class="page">
 <p class="eyebrow">COMMUNITY SUPPORT</p><h1>Donate Now<span>.</span></h1><p class="lede">Your contribution supports Chhath Puja arrangements and community service. Please verify payment details before sending money.</p>
 {#if loading}<p class="notice">Loading verified donation information…</p>{:else if error}<p class="notice" role="status">{error}</p>{/if}
