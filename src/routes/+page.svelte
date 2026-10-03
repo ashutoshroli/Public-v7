@@ -85,7 +85,6 @@
 
 <svelte:head>
   <title>Chhath Puja — Transparency Portal</title>
-  <meta name="description" content="Public contribution and expense records for the Shaharpura Chhath Puja committee." />
   <meta name="theme-color" content="#f8f8f5" />
 </svelte:head>
 

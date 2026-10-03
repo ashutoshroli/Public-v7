@@ -1,5 +1,5 @@
 <script lang="ts">import BottomNav from "$lib/components/BottomNav.svelte"; import NotifyButton from "$lib/components/NotifyButton.svelte";</script>
-<svelte:head><title>User Guide — Chhath Puja</title><meta name="description" content="How to use the Chhath Puja public transparency portal." /></svelte:head>
+<svelte:head><title>User Guide — Chhath Puja</title></svelte:head>
 
 <main class="page">
   <p class="eyebrow">HELP CENTRE</p><h1>User Guide<span>.</span></h1><p class="lede">How to browse community records and use this portal on your phone.</p>

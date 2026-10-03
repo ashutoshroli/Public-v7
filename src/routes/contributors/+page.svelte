@@ -68,7 +68,7 @@
     void loadPortalData().catch(() => {});
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
-<svelte:head><title>Contributors — Chhath Puja</title><meta name="description" content="Browse public contribution records for Shaharpura Chhath Puja." /></svelte:head>
+<svelte:head><title>Contributors — Chhath Puja</title></svelte:head>
 
 <main class="page">
   <p class="eyebrow">PUBLIC LEDGER / CONTRIBUTIONS</p><h1>Contributors<span>.</span></h1><p class="lede">Browse community contributions by name and year.</p>

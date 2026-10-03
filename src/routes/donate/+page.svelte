@@ -19,7 +19,7 @@
   const unsubError=portalError.subscribe(v=>error=v);
   onMount(()=>{void loadPortalData().catch(()=>{});return()=>{unsubData();unsubLoad();unsubError();};});
 </script>
-<svelte:head><title>Donate Now — Chhath Puja</title><meta name="description" content="Support Navyuvak Chhath Puja Samiti, Shaharpura, Gardih."/></svelte:head>
+<svelte:head><title>Donate Now — Chhath Puja</title></svelte:head>
 
 <main class="page">
 <p class="eyebrow">COMMUNITY SUPPORT</p><h1>Donate Now<span>.</span></h1><p class="lede">Your contribution supports Chhath Puja arrangements and community service. Please verify payment details before sending money.</p>

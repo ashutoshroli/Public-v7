@@ -23,7 +23,7 @@
   const e=portalError.subscribe(v=>error=String(v||''));
   onMount(()=>{void loadPortalData();return()=>{u();l();e();};});
 </script>
-<svelte:head><title>Document verification — Chhath Puja</title><meta name="description" content="Verify a public Chhath Puja portal document."/></svelte:head>
+<svelte:head><title>Document verification — Chhath Puja</title></svelte:head>
 
 <main class="page"><p class="eyebrow">PUBLIC RECORDS</p><h1>Document verification<span>.</span></h1><p class="lede">Check a receipt or public document against the portal's published generated-file index.</p>
 <section class="records verification" aria-live="polite">

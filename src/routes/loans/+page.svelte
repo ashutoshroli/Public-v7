@@ -70,7 +70,7 @@
     void loadPortalData().catch(() => {});
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
-<svelte:head><title>Loans — Chhath Puja</title><meta name="description" content="Browse public loan and repayment records for Shaharpura Chhath Puja." /></svelte:head>
+<svelte:head><title>Loans — Chhath Puja</title></svelte:head>
 
 <main class="page">
   <p class="eyebrow">PUBLIC LEDGER / LOANS</p><h1>Loans & Returns<span>.</span></h1><p class="lede">Browse recorded loans and repayment information.</p>

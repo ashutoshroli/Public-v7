@@ -68,7 +68,7 @@
     void loadPortalData().catch(() => {});
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
-<svelte:head><title>Downloads — Chhath Puja</title><meta name="description" content="Public receipts, certificates and consent documents." /></svelte:head>
+<svelte:head><title>Downloads — Chhath Puja</title></svelte:head>
 
 <main class="page">
   <p class="eyebrow">PUBLIC DOCUMENTS / GENERATED FILES</p><h1>Downloads<span>.</span></h1><p class="lede">Published receipts, material records, certificates and accepted loan consent documents.</p>

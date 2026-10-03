@@ -37,7 +37,7 @@
     void loadPortalData().catch(() => {});
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); };
   });</script>
-<svelte:head><title>Committee — Chhath Puja</title><meta name="description" content="Committee information for Shaharpura Chhath Puja." /></svelte:head>
+<svelte:head><title>Committee — Chhath Puja</title></svelte:head>
 
 <main class="page">
   <p class="eyebrow">COMMUNITY / ORGANISATION</p><h1>Committee<span>.</span></h1><p class="lede">Navyuvak Chhath Puja Samiti, Shaharpura, Gardih.</p>

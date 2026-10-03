@@ -20,7 +20,7 @@
   function selectYear(y: number) { active = y; year.set(y); selectedPortalYear.set(String(y)); }
   $effect(() => { if (years.length && !years.some((item) => item.year === active)) active = years[years.length - 1].year; });
 </script>
-<svelte:head><title>{$tr('decade_title')} — {$tr('app_title')}</title><meta name="description" content="Explore the Shaharpura Chhath Puja community journey, with live yearly records and published milestones."/></svelte:head>
+<svelte:head><title>{$tr('decade_title')} — {$tr('app_title')}</title></svelte:head>
 <main class="page journey-page">
   <p class="eyebrow">{$lang === 'hi' ? 'हमारी यात्रा' : 'OUR JOURNEY'} / {stats.startYear}—{stats.endYear}</p>
   <h1>{heading}<span>.</span></h1><p class="lede">{subtitle}</p><p class="lede">{intro}</p>

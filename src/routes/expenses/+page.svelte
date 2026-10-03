@@ -45,7 +45,7 @@
     void loadPortalData().catch(() => {});
     return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });</script>
-<svelte:head><title>Expenses — Chhath Puja</title><meta name="description" content="Browse recorded expenses for Shaharpura Chhath Puja." /></svelte:head>
+<svelte:head><title>Expenses — Chhath Puja</title></svelte:head>
 
 <main class="page">
   <p class="eyebrow">PUBLIC LEDGER / SPENDING</p><h1>Expenses<span>.</span></h1><p class="lede">Browse recorded spending and filter transactions by year, category or description.</p>
