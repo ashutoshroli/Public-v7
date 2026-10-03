@@ -1,5 +1,8 @@
 <script lang="ts">
+  import BottomNav from "$lib/components/BottomNav.svelte";
+  import DonatePopup from "$lib/components/DonatePopup.svelte";
   import { onMount } from 'svelte';
+  import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
 
   type Row = Record<string, unknown>;
   type PortalData = { collections?: Row[]; expenses?: Row[]; loans?: Row[]; committee?: Row[]; users?: Row[] };
@@ -8,11 +11,17 @@
   let loading = true;
   let error = '';
   let selectedYear = String(new Date().getFullYear());
+  let yearInitialized = false;
   let query = '';
   let hasLoaded = false;
 
   const value = (row: Row, ...keys: string[]) => {
-    for (const key of keys) if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]);
+    for (const key of keys) {
+      if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]).trim();
+      const norm = key.trim().toLowerCase().replace(/\s+/g,' ');
+      const actual = Object.keys(row).find(k => k.trim().toLowerCase().replace(/\s+/g,' ') === norm);
+      if (actual && row[actual] !== undefined && row[actual] !== null && String(row[actual]).trim()) return String(row[actual]).trim();
+    }
     return '';
   };
   const amount = (v: unknown) => {
@@ -21,52 +30,55 @@
   };
   const money = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
   const yearOf = (r: Row) => value(r, 'Year', 'year');
-  const byYear = (rows: Row[] = []) => selectedYear === 'All' ? rows : rows.filter(r => yearOf(r) === selectedYear);
+  const byYear = (rows: Row[] = []) => rows.filter(r => yearOf(r) === selectedYear);
+  const isResell = (r: Row) => ['true','1','yes'].includes(value(r,'Is Resell').toLowerCase());
+  const isCash = (r: Row) => ['1','cash','money','monetary',''].includes(value(r,'Contribution Type','Type','type').toLowerCase());
+  $: userMap = new Map((data.users || []).map(u => [value(u,'ID','ID '),u]).filter(([id]) => !!id) as [string,Row][]);
   $: availableYears = [...new Set([...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])].map(yearOf).filter(y => /^20\d{2}$/.test(y)))].sort((a,b) => Number(b)-Number(a));
-  $: years = [...new Set([...(availableYears.length ? availableYears : [String(new Date().getFullYear())]), 'All'])];
-  $: if (hasLoaded && selectedYear !== 'All' && availableYears.length && !availableYears.includes(selectedYear)) selectedYear = availableYears[0];
+  $: years = availableYears.length ? availableYears : [String(new Date().getFullYear())];
+  $: if (hasLoaded && availableYears.length && !availableYears.includes(selectedYear)) selectedYear = availableYears[0];
+  $: if (hasLoaded && availableYears.length && !yearInitialized) { selectedYear = availableYears[0]; yearInitialized = true; }
+  $: if (yearInitialized && selectedYear) selectedPortalYear.set(selectedYear);
   $: collections = byYear(data.collections || []);
   $: expenses = byYear(data.expenses || []);
-  $: contributors = collections.reduce((map, row) => {
-    const name = value(row, 'Name', 'name') || 'Community contribution';
-    const key = name.toLocaleLowerCase();
-    const old = map.get(key) || { name, amount: 0, type: '' };
-    old.amount += amount(value(row, 'Amount', 'amount'));
+  $: contributors = collections.filter(row => !isResell(row)).reduce((map, row) => {
+    const id = value(row,'ID','ID ') || value(row,'Name','name');
+    if (!id) return map;
+    const user = userMap.get(id);
+    const name = value(user,'Name (Hindi)','Name','Name ') || value(row,'Name (Hindi)','Name','name') || id;
+    const old = map.get(id) || { name, amount: 0, type: '' };
+    if (isCash(row)) old.amount += amount(value(row,'Amount','amount'));
     old.type = value(row, 'Contribution Type', 'Type', 'type') || old.type;
-    map.set(key, old);
+    map.set(id, old);
     return map;
   }, new Map<string, {name: string; amount: number; type: string}>());
-  $: collectionTotal = collections.reduce((sum, row) => sum + amount(value(row, 'Amount', 'amount')), 0);
+  $: collectionTotal = collections.filter(row => !isResell(row) && isCash(row)).reduce((sum, row) => sum + amount(value(row, 'Amount', 'amount')), 0);
   $: expenseTotal = expenses.reduce((sum, row) => sum + amount(value(row, 'Amount', 'amount')), 0);
-  $: loanRows = (data.loans || []).filter(r => selectedYear === 'All' || yearOf(r) === String(Number(selectedYear) - 1));
+  $: loanRows = (data.loans || []).filter(r => yearOf(r) === String(Number(selectedYear) - 1));
   $: returnedLoans = loanRows.reduce((sum, row) => {
-    const principal = amount(value(row, 'Amount', 'amount'));
-    const rate = amount(value(row, 'Interest Rate', 'Intrest Rate'));
-    const tenure = amount(value(row, 'Tenure'));
+    const principal = amount(value(row, 'Amount', 'Principal', 'Loan Amount', 'amount'));
+    const rate = amount(value(row, 'Interest Rate', 'Intrest Rate', 'Monthly Interest Rate'));
+    const tenure = amount(value(row, 'Tenure', 'Tenure (Months)', 'Duration', 'Months'));
     return sum + principal + principal * rate / 100 * tenure;
   }, 0);
   $: budget = collectionTotal + returnedLoans;
-  $: filteredContributors = [...contributors.values()].filter(c => c.name.toLowerCase().includes(query.toLowerCase())).sort((a,b) => b.amount-a.amount);
+  $: utilization = budget > 0 ? Math.min(100, expenseTotal / budget * 100) : 0;
+  $: filteredContributors = [...contributors.values()].sort((a,b) => b.amount-a.amount);
 
+  const unsubscribeData = portalData.subscribe(value => { data = value as PortalData; if (Object.keys(value).length) hasLoaded = true; });
+  const unsubscribeLoading = portalLoading.subscribe(value => { loading = value; });
+  const unsubscribeError = portalError.subscribe(value => { error = value; });
+  const unsubscribeYear = selectedPortalYear.subscribe(value => { if (value && availableYears.includes(value)) selectedYear = value; });
   async function loadData() {
-    loading = true;
-    error = '';
-    try {
-      const response = await fetch(API + '?action=portalData');
-      if (!response.ok) throw new Error('Portal data is temporarily unavailable.');
-      const raw = await response.json();
-      const next = raw.data && typeof raw.data === 'object' ? raw.data : raw;
-      if (!next || typeof next !== 'object') throw new Error('The public data response was not in the expected format.');
-      data = next;
-      hasLoaded = true;
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'Unable to load public records.';
-    } finally {
-      loading = false;
-    }
+    try { await loadPortalData(); }
+    catch (e) { error = e instanceof Error ? e.message : 'Unable to load public records.'; }
   }
-
-  onMount(() => { void loadData(); });
+  onMount(() => {
+    const record = new URLSearchParams(window.location.search).get('record');
+    if (record) { window.location.replace('/verify/?record=' + encodeURIComponent(record)); return; }
+    void loadData();
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
+  });
 </script>
 
 <svelte:head>
@@ -84,7 +96,7 @@
     <span class="language" aria-label="Language options not available yet">EN / हिंदी</span>
     <label class="year-picker"><span class="sr-only">Select year</span>
       <select bind:value={selectedYear} aria-label="Select year">
-        {#each years as y}<option value={y}>{y === 'All' ? 'All years' : y}</option>{/each}
+        {#each years as y}<option value={y}>{y}</option>{/each}
       </select>
     </label>
   </div>
@@ -93,6 +105,9 @@
 <main class="page">
   <section class="intro">
     <p class="eyebrow"><span class="live-dot"></span> PUBLIC LEDGER <span class="separator">/</span> SHAHARPURA</p>
+    <div class="hero-image" role="img" aria-label="Sunrise over a river, representing Chhath Puja">
+      <div><p>आस्था • सहयोग • पारदर्शिता</p><h2>छठ पूजा</h2><p>आस्था · सहयोग · पारदर्शिता</p></div>
+    </div>
     <h1>Faith deserves<br /><span>transparency.</span></h1>
     <p class="lede">छठ पूजा पारदर्शिता पोर्टल — नवयुवक छठ पूजा समिति</p>
   </section>
@@ -105,56 +120,31 @@
       <article class="budget-card">
         <p class="eyebrow">TOTAL BUDGET · {selectedYear}</p>
         <strong>{money(budget)}</strong>
-        <div class="progress-track"><span style:width="{budget > 0 ? Math.min(100, expenseTotal / budget * 100) : 0}%"></span></div>
-        <div class="budget-foot"><span>{budget > 0 ? (expenseTotal / budget * 100).toFixed(1) : '0.0'}% used</span><span>{money(budget-expenseTotal)} remaining</span></div>
+        <div class="progress-track"><span style:width="{utilization}%"></span></div>
+        <div class="budget-foot"><span>{utilization.toFixed(1)}% utilized</span><span>{money(budget-expenseTotal)} still available</span></div>
       </article>
       <article class="metric"><span class="metric-label">Collected</span><strong>{money(collectionTotal)}</strong><span class="metric-note">Public contributions</span></article>
       <article class="metric"><span class="metric-label">Expenses</span><strong>{money(expenseTotal)}</strong><span class="metric-note">Recorded spending</span></article>
-      <article class="metric"><span class="metric-label">Past loan return*</span><strong>{money(returnedLoans)}</strong><span class="metric-note">Estimated principal + interest</span></article>
+      <article class="metric"><span class="metric-label">Loan Returned (with Int.)</span><strong>{money(returnedLoans)}</strong><span class="metric-note">Estimated principal + interest</span></article>
     </section>
-
-    <section class="section-head" id="contributors">
-      <div><p class="eyebrow">COMMUNITY · {filteredContributors.length} NAMES</p><h2>Contributors</h2></div>
-      <label class="search"><span aria-hidden="true">⌕</span><input bind:value={query} placeholder="Search name…" aria-label="Search contributors" /></label>
-    </section>
-    <section class="records" aria-label="Contributor list">
-      {#each filteredContributors as contributor, i}
-        <article class="record">
-          <span class="rank">{String(i+1).padStart(2,'0')}</span>
-          <div class="record-main"><strong>{contributor.name}</strong><small>{contributor.type || 'Community contribution'}</small></div>
-          <strong class="record-amount">{money(contributor.amount)}</strong>
-        </article>
-      {:else}
-        <p class="empty">No contributors match this search.</p>
-      {/each}
-    </section>
-
-    <section class="section-head" id="expenses">
-      <div><p class="eyebrow">OUTGOING · {expenses.length} RECORDS</p><h2>Recent expenses</h2></div>
-      <span class="section-total">{money(expenseTotal)}</span>
-    </section>
-    <section class="records" aria-label="Expense records">
-      {#each expenses.slice(0, 8) as item, i}
-        <article class="record">
-          <span class="rank">{String(i+1).padStart(2,'0')}</span>
-          <div class="record-main"><strong>{value(item, 'Description', 'Discription', 'description', 'Name') || 'Expense record'}</strong><small>{value(item, 'Category', 'category') || yearOf(item) || selectedYear}</small></div>
-          <strong class="record-amount">{money(amount(value(item, 'Amount', 'amount')))}</strong>
-        </article>
-      {:else}
-        <p class="empty">No expense records available for this year.</p>
-      {/each}
-    </section>
+    <div class="stat-row">
+      <a class="stat-tile" href="/contributors/"><small>Contributors ↗</small><strong>{filteredContributors.length}</strong><small>View full list</small></a>
+      <a class="stat-tile" href="/expenses/"><small>Expense records ↗</small><strong>{expenses.length}</strong><small>View all expenses</small></a>
+      <div class="stat-tile"><small>Years</small><strong>{availableYears.length || 10}</strong><small>Of community service</small></div>
+    </div>
   {/if}
 
   <section class="journey" id="journey">
     <div><p class="eyebrow">2017 — 2026</p><h2>A decade of community service.</h2><p>See how our Chhath Puja journey has grown through the years.</p></div>
     <a href="/decade/">Explore journey <span aria-hidden="true">↗</span></a>
   </section>
+  <div class="donate-popup-entry"><DonatePopup /></div>
   <nav class="quick-links" aria-label="Portal sections">
-    <a href="#contributors">Contributors <span>↗</span></a>
-    <a href="#expenses">Expenses <span>↗</span></a>
+    <a href="/contributors/">Contributors <span>↗</span></a>
+    <a href="/expenses/">Expenses <span>↗</span></a>
     <a href="/decade/">Our Journey <span>↗</span></a>
     <a href="/downloads/">Downloads <span>↗</span></a>
   </nav>
   <footer><span>CHHATH PUJA / TRANSPARENCY</span><span>Faith · Unity · Accountability</span></footer>
 </main>
+<BottomNav />

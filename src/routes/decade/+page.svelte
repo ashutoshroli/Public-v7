@@ -1,43 +1,60 @@
 <script lang="ts">
+  import BottomNav from "$lib/components/BottomNav.svelte";
   import { onMount } from 'svelte';
+  import { loadPortalData, portalData, portalLoading, portalError, selectedPortalYear } from '$lib/stores/portal';
 
   type Row = Record<string, unknown>;
-  type PortalData = { collections?: Row[]; expenses?: Row[]; loans?: Row[]; committee?: Row[] };
-  const API = 'https://chhath-public-worker.shaharpura.com?action=portalData';
+  type PortalData = { collections?: Row[]; expenses?: Row[]; loans?: Row[]; committee?: Row[]; users?: Row[] };
   let data: PortalData = {};
   let years = Array.from({ length: 10 }, (_, i) => 2017 + i);
   let active = 2017;
   let counts = 0;
+  let cashTotal = 0;
+  let peopleCount = 0;
   let loading = true;
   let error = '';
 
-  const yearOf = (row: Row) => String(row.Year ?? row.year ?? '');
+  const value = (row: Row, ...keys: string[]) => {
+    for (const key of keys) {
+      if (row[key] !== undefined && row[key] !== null && String(row[key]).trim()) return String(row[key]).trim();
+      const norm = key.trim().toLowerCase().replace(/\s+/g,' ');
+      const actual = Object.keys(row).find(k => k.trim().toLowerCase().replace(/\s+/g,' ') === norm);
+      if (actual && row[actual] !== undefined && row[actual] !== null && String(row[actual]).trim()) return String(row[actual]).trim();
+    }
+    return '';
+  };
+  const yearOf = (row: Row) => value(row,'Year','year');
+  const amountOf = (v: unknown) => { const n = Number(String(v ?? '').replace(/[^0-9.-]/g,'')); return Number.isFinite(n) ? n : 0; };
+  const isResell = (row: Row) => ['true','1','yes'].includes(value(row,'Is Resell').toLowerCase());
+  const isCash = (row: Row) => ['1','cash','money','monetary',''].includes(value(row,'Contribution Type','Type').toLowerCase());
   function updateCount(year: number) {
-    counts = (data.collections || []).filter(row => yearOf(row) === String(year)).length;
+    const rows = (data.collections || []).filter(row => yearOf(row) === String(year) && !isResell(row));
+    counts = rows.length;
+    cashTotal = rows.reduce((sum,row) => sum + (isCash(row) ? amountOf(value(row,'Amount')) : 0),0);
+    peopleCount = new Set(rows.map(row => value(row,'ID','Name')).filter(Boolean)).size;
   }
 
-  onMount(async () => {
-    try {
-      const response = await fetch(API);
-      if (!response.ok) throw new Error('Journey records are temporarily unavailable.');
-      const raw = await response.json();
-      data = raw.data && typeof raw.data === 'object' ? raw.data : raw;
-      const all = [...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])];
-      const seen = [...new Set(all.map(yearOf).filter(year => /^20\d{2}$/.test(year)))].map(Number).sort((a, b) => a - b);
-      if (seen.length) {
-        years = [...new Set([...seen, 2026])].sort((a, b) => a - b);
-        if (!years.includes(active)) active = years[0];
-      }
-      updateCount(active);
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'Unable to load journey records.';
-    } finally {
-      loading = false;
+  const unsubscribeData = portalData.subscribe(value => {
+    data = value as PortalData;
+    const all = [...(data.collections || []), ...(data.expenses || []), ...(data.loans || []), ...(data.committee || [])];
+    const seen = [...new Set(all.map(yearOf).filter(year => /^20\d{2}$/.test(year)))].map(Number).sort((a,b)=>a-b);
+    if (seen.length) {
+      years = [...new Set([...seen,2026])].sort((a,b)=>a-b);
+      if (!years.includes(active)) active = years[0];
     }
+    updateCount(active);
+  });
+  const unsubscribeLoading = portalLoading.subscribe(value => { loading = value; });
+  const unsubscribeError = portalError.subscribe(value => { error = value; });
+  const unsubscribeYear = selectedPortalYear.subscribe(value => { const year = Number(value); if (Number.isFinite(year) && years.includes(year)) { active = year; updateCount(year); } });
+  onMount(() => {
+    void loadPortalData().catch(() => {});
+    return () => { unsubscribeData(); unsubscribeLoading(); unsubscribeError(); unsubscribeYear(); };
   });
 
   function selectYear(year: number) {
     active = year;
+    selectedPortalYear.set(String(year));
     updateCount(year);
   }
 </script>
@@ -55,6 +72,7 @@
   <div class="year-strip" aria-label="Choose a year">
     {#each years as y}<button class:active={active===y} aria-pressed={active===y} onclick={() => selectYear(y)}>{y}</button>{/each}
   </div>
-  <section class="journey-feature" aria-live="polite"><p class="eyebrow">YEAR IN FOCUS</p><strong class="journey-year">{active}</strong><h2>One community. A shared commitment.</h2><p>Every contribution and every recorded expense is part of our shared story.</p><div class="journey-stat"><span>Contribution records{loading ? ' · Loading' : ''}</span><strong>{counts}</strong></div></section>
+  <section class="journey-feature" aria-live="polite"><p class="eyebrow">YEAR IN FOCUS</p><strong class="journey-year">{active}</strong><h2>One community. A shared commitment.</h2><p>Every contribution and every recorded expense is part of our shared story.</p><div class="journey-stat"><span>Contribution records{loading ? ' · Loading' : ''}</span><strong>{counts}</strong></div><div class="journey-stat"><span>Unique contributor IDs</span><strong>{peopleCount}</strong></div><div class="journey-stat"><span>Cash contributions</span><strong>{new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(cashTotal)}</strong></div></section>
   <a class="back-link" href="/">← Back to public ledger</a>
 </main>
+<BottomNav />
